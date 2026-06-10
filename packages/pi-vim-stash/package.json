@@ -2,6 +2,16 @@
   "name": "@r3b1s/pi-vim-stash",
   "version": "0.1.0",
   "description": "Vim-style modal editing with prompt stash for pi's TUI editor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r3b1s/pi-things.git",
+    "directory": "packages/pi-vim-stash"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
   "license": "MIT",
   "publishConfig": {

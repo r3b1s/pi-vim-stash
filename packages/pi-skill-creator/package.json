@@ -2,6 +2,11 @@
   "name": "@r3b1s/pi-skill-creator",
   "version": "0.1.0",
   "description": "Pi-native skill creator extension and bundled skill workflow.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r3b1s/pi-things.git",
+    "directory": "packages/pi-skill-creator"
+  },
   "type": "module",
   "license": "Apache-2.0",
   "publishConfig": {
@@ -21,7 +26,9 @@
     "src",
     "skills",
     "third_party",
+    "CHANGELOG.md",
     "README.md",
+    "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "package.json"
   ],
@@ -45,6 +52,9 @@
       "./skills"
     ]
   },
+  "engines": {
+    "node": ">=22"
+  },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
@@ -53,6 +63,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "eslint": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

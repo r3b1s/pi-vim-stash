@@ -49,4 +49,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - N/A — Initial release.
 
-[0.1.0]: https://github.com/kludge/pi-skill-creator/releases/tag/v0.1.0
+[0.1.0]: https://github.com/r3b1s/pi-things/releases/tag/pi-skill-creator-v0.1.0

@@ -2,6 +2,19 @@
   "name": "@r3b1s/pi-holo-mem",
   "version": "0.1.0",
   "description": "Holographic memory for Pi — structured fact storage with compositional reasoning via HRR algebra",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r3b1s/pi-things.git",
+    "directory": "packages/pi-holo-mem"
+  },
+  "files": [
+    "src",
+    "python",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "plugin.yaml"
+  ],
   "type": "module",
   "main": "src/index.ts",
   "publishConfig": {

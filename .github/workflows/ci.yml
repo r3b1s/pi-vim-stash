@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm -r run check
+
+      - name: Lint (biome)
+        run: biome check .
+
+      - name: Lint (eslint)
+        run: eslint packages/
+
+      - name: Test
+        run: pnpm -r run test
+
+      - name: Python tests (pi-holo-mem)
+        run: |
+          cd packages/pi-holo-mem
+          python3 -m venv /tmp/pi-holo-mem-test-venv
+          /tmp/pi-holo-mem-test-venv/bin/pip install --quiet -r python/requirements.txt pytest
+          /tmp/pi-holo-mem-test-venv/bin/pytest python/tests/ -v
+
+      - name: Cleanup Python test venv
+        if: always()
+        run: rm -rf /tmp/pi-holo-mem-test-venv
+
+  release-please:
+    needs: [check]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      releases: ${{ toJSON(steps.release.outputs) }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: needs.release-please.result == 'success' && needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: Release
+      url: https://www.npmjs.com/org/r3b1s
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Publish released packages
+        env:
+          RELEASES: ${{ needs.release-please.outputs.releases }}
+          NPM_CONFIG_PROVENANCE: true
+        run: ./scripts/publish.sh

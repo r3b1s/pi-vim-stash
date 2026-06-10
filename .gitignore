@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+htmlcov/
+
+# Pi internal
+.pi/npm/
+
+# Dead code
+.fallow/
+
+# Packages
+*.tgz
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Vite temp
+*.temp
+*.tmp
+
+# Runtime artifacts (defensive — externalized to ~/.pi/agent/)
+*.db
+*.pid
+*.log
+
+# pnpm
+pnpm-debug.log*
+**/package-lock.json
+.pnpm-store/
+
+# OpenSpec changes (keep tracked)
+# openspec/changes/ is version-controlled
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+venv/
+.venv/

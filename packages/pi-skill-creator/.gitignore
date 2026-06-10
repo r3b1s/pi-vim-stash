@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Pi skill-creator durable local run artifacts; not intended for commit.
+.pi/skill-creator/runs/
+
+# Pi project-local tool configuration (openspec CLI prompts, skills)
+.pi/

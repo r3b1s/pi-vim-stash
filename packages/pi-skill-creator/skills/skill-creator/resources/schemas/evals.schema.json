@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pi.local/skill-creator/evals.schema.json",
+  "title": "Skill Creator Eval Set",
+  "type": "object",
+  "required": ["skill_name", "evals"],
+  "properties": {
+    "skill_name": { "type": "string" },
+    "evals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "prompt"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "prompt": { "type": "string" },
+          "expected_output": { "type": "string" },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "expectations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["text"],
+              "properties": {
+                "text": { "type": "string" },
+                "assertion": { "type": "string" },
+                "weight": { "type": "number" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "metadata": { "type": "object", "additionalProperties": true }
+        },
+        "additionalProperties": true
+      }
+    },
+    "pi": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

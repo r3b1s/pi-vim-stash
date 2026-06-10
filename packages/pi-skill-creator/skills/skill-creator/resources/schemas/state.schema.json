@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pi.local/skill-creator/state.schema.json",
+  "title": "Pi Skill Creator State",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "runId",
+    "status",
+    "intent",
+    "rails",
+    "sideThreads",
+    "pendingConfirmations",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string" },
+    "status": {
+      "enum": ["active", "reviewing", "completed", "parked", "errored"]
+    },
+    "intent": {
+      "enum": [
+        "unknown",
+        "create-new",
+        "improve-existing",
+        "run-evals",
+        "port-adapt"
+      ]
+    },
+    "rails": {
+      "type": "object",
+      "required": ["phase", "nextSuggestedActions", "artifactPaths"],
+      "properties": {
+        "currentGoal": { "type": "string" },
+        "phase": {
+          "enum": [
+            "discover",
+            "draft",
+            "eval-planning",
+            "eval-running",
+            "review",
+            "improve",
+            "complete"
+          ]
+        },
+        "nextSuggestedActions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "artifactPaths": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "sideThreads": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "pendingConfirmations": { "type": "array", "items": { "type": "string" } },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  },
+  "additionalProperties": true
+}

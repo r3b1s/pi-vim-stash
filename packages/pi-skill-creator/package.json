@@ -1,0 +1,59 @@
+{
+  "name": "@r3b1s/pi-skill-creator",
+  "version": "0.1.0",
+  "description": "Pi-native skill creator extension and bundled skill workflow.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "agent-skills",
+    "skill-creator"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./extension": "./src/extension/index.ts"
+  },
+  "files": [
+    "src",
+    "skills",
+    "third_party",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "package.json"
+  ],
+  "imports": {
+    "#src/*": "./src/*",
+    "#test/*": "./test/*"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "lint": "eslint src/ test/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "biome check --write .",
+    "validate:openspec": "openspec validate add-skill-creator-extension --strict"
+  },
+  "pi": {
+    "extensions": [
+      "./src/extension/index.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

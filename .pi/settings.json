@@ -1,8 +1,0 @@
-{
-  "packages": [
-    "./packages/pi-skill-creator",
-    "./packages/pi-vim-stash",
-    "./packages/pi-token-killer",
-    "./packages/pi-holo-mem"
-  ]
-}

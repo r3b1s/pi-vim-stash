@@ -5,6 +5,14 @@ All notable changes to the pi-skill-creator extension will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/r3b1s/pi-things/compare/pi-skill-creator-v0.2.0...pi-skill-creator-v0.2.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* **pi-skill-creator:** migrate from typebox to @sinclair/typebox ([87cedd2](https://github.com/r3b1s/pi-things/commit/87cedd2c898776415befb1a64bd124c98f97a302))
+* **pi-skill-creator:** simplify analyzeBenchmarkPlaceholder type assertion ([32aa11f](https://github.com/r3b1s/pi-things/commit/32aa11f787aa29f3f82957d023c9e1b6dc7945c8))
+
 ## [0.2.0](https://github.com/r3b1s/pi-things/compare/pi-skill-creator-v0.1.0...pi-skill-creator-v0.2.0) (2026-06-10)
 
 

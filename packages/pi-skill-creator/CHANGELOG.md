@@ -5,6 +5,14 @@ All notable changes to the pi-skill-creator extension will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/r3b1s/pi-things/compare/pi-skill-creator-v0.1.0...pi-skill-creator-v0.2.0) (2026-06-10)
+
+
+### Features
+
+* **pi-skill-creator:** import skill creator extension ([c24aadc](https://github.com/r3b1s/pi-things/commit/c24aadcef8ad320d26421f8d2f3cd068ca79caff))
+* **repo:** add CI/CD pipeline with release-please and npm publishing ([b8872bb](https://github.com/r3b1s/pi-things/commit/b8872bb36f78342eb8255200be09be66f1e8dd3c))
+
 ## [0.1.0] - 2026-05-26
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "@r3b1s/pi-vim-stash",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Vim-style modal editing with prompt stash for pi's TUI editor",
   "repository": {
     "type": "git",

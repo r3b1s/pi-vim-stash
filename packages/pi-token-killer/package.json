@@ -1,6 +1,6 @@
 {
   "name": "@r3b1s/pi-token-killer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "RTK (Rust Token Killer) extension for pi-coding-agent — routes eligible bash commands through rtk",
   "repository": {
     "type": "git",

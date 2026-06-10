@@ -1,6 +1,6 @@
 {
   "name": "@r3b1s/pi-holo-mem",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Holographic memory for Pi — structured fact storage with compositional reasoning via HRR algebra",
   "repository": {
     "type": "git",

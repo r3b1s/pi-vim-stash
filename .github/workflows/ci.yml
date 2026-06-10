@@ -31,10 +31,10 @@ jobs:
         run: pnpm -r run check
 
       - name: Lint (biome)
-        run: biome check .
+        run: pnpm exec biome check .
 
       - name: Lint (eslint)
-        run: eslint packages/
+        run: pnpm exec eslint packages/
 
       - name: Test
         run: pnpm -r run test

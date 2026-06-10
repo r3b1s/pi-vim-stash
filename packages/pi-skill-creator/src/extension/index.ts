@@ -718,9 +718,7 @@ export default function skillCreatorExtension(pi: ExtensionAPI) {
 
       if (params.action === "analyze_benchmark") {
         const findings = analyzeBenchmarkPlaceholder(
-          (params.analysisInput ?? {}) as Parameters<
-            typeof analyzeBenchmarkPlaceholder
-          >[0],
+          params.analysisInput ?? {},
         );
         return {
           content: [

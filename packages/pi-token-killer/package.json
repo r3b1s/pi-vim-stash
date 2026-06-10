@@ -1,0 +1,39 @@
+{
+  "name": "@r3b1s/pi-token-killer",
+  "version": "0.2.0",
+  "description": "RTK (Rust Token Killer) extension for pi-coding-agent — routes eligible bash commands through rtk",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "pi-package"
+  ],
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

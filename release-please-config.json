@@ -1,7 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
-    "packages/pi-subagents-deterministic": { "component": "pi-subagents-deterministic" },
+    "packages/pi-subagents-deterministic": {
+      "component": "pi-subagents-deterministic"
+    },
     "packages/pi-tmux-sessionizer": { "component": "pi-tmux-sessionizer" },
     "packages/pi-holo-mem": { "component": "pi-holo-mem" },
     "packages/pi-skill-creator": { "component": "pi-skill-creator" },

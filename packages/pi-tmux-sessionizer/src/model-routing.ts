@@ -50,7 +50,7 @@ export function readModelRouting(
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return undefined;
     }
-    return parsed as ModelRoutingConfig;
+    return parsed;
   } catch {
     return undefined;
   }

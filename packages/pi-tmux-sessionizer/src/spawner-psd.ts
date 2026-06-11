@@ -53,7 +53,7 @@ export async function importPsd(): Promise<PsdApi | undefined> {
         mod &&
         typeof (mod as Record<string, unknown>).setSpawner === "function"
       ) {
-        return mod as unknown as PsdApi;
+        return mod;
       }
     } catch {
       // Not loaded yet — wait and retry

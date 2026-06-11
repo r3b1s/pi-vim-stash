@@ -97,7 +97,7 @@ function extractAssistantText(entry: SessionEntry): string {
         block !== null &&
         (block as Record<string, unknown>).type === "text",
     )
-    .map((block) => String(block.text ?? ""))
+    .map((block) => (typeof block.text === "string" ? block.text : ""))
     .join("\n");
 }
 

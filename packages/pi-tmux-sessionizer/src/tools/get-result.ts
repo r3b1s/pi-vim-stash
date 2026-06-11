@@ -93,7 +93,10 @@ async function execute(
           `Agent ${agentId} encountered an error: ${record.error ?? "Unknown error"}`,
         );
       default:
-        return textResult(`Agent ${agentId} status: ${record.status}`);
+        return textResult(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `Agent ${agentId} status: ${record.status}`,
+        );
     }
   } catch (err) {
     return textResult(

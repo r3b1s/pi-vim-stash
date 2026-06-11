@@ -740,8 +740,8 @@ describe("inherit_context (task 9.14)", () => {
 
       const params = spawnSubagentMock.mock.calls[0][0] as SpawnParams;
       expect(params.inheritContext).toBe(true);
-      expect(params.parentContext).toEqual(contextRef.current!.messages);
-      expect(params.parentContextText).toBe(contextRef.current!.text);
+      expect(params.parentContext).toEqual(contextRef.current.messages);
+      expect(params.parentContextText).toBe(contextRef.current.text);
       expect(params.agentType).toBe("implementer");
       expect(params.model).toBe("claude-sonnet");
     });

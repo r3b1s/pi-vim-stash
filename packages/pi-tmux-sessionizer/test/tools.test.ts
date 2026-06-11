@@ -164,6 +164,7 @@ describe("spawner-psd bridge", () => {
             text = `Agent ${agentId} encountered an error: ${record.error ?? "Unknown error"}`;
             break;
           default:
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             text = `Agent ${agentId} status: ${record.status}`;
         }
         return {

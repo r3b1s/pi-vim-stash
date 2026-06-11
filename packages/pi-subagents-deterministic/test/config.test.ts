@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { ModelEntry, ModelRoutingConfig } from "#src/config";
+import type { ModelEntry } from "#src/config";
 import { readModelRouting, resolveModelsForType } from "#src/config";
 
 // ──────────────────────────────────────────────
@@ -249,10 +249,7 @@ describe("resolveModelsForType", () => {
         },
       },
     };
-    const result = resolveModelsForType(
-      "Explore",
-      routing as ModelRoutingConfig,
-    );
+    const result = resolveModelsForType("Explore", routing);
     expect(Array.isArray(result)).toBe(true);
     const models = result as Array<{ model: string; thinking?: string }>;
     expect(models.length).toBe(1);
@@ -267,10 +264,7 @@ describe("resolveModelsForType", () => {
         },
       },
     };
-    const result = resolveModelsForType(
-      "Explore",
-      routing as ModelRoutingConfig,
-    );
+    const result = resolveModelsForType("Explore", routing);
     expect(Array.isArray(result)).toBe(true);
     const models = result as Array<{ model: string; thinking?: string }>;
     expect(models.length).toBe(1);
@@ -285,10 +279,7 @@ describe("resolveModelsForType", () => {
         },
       },
     };
-    const result = resolveModelsForType(
-      "Explore",
-      routing as ModelRoutingConfig,
-    );
+    const result = resolveModelsForType("Explore", routing);
     expect(Array.isArray(result)).toBe(true);
     const models = result as Array<{ model: string; thinking?: string }>;
     expect(models.length).toBe(1);
@@ -303,10 +294,7 @@ describe("resolveModelsForType", () => {
         },
       },
     };
-    const result = resolveModelsForType(
-      "Explore",
-      routing as ModelRoutingConfig,
-    );
+    const result = resolveModelsForType("Explore", routing);
     expect(Array.isArray(result)).toBe(true);
     const models = result as Array<{ model: string; thinking?: string }>;
     expect(models.length).toBe(1);
@@ -321,10 +309,7 @@ describe("resolveModelsForType", () => {
         },
       },
     };
-    const result = resolveModelsForType(
-      "Explore",
-      routing as ModelRoutingConfig,
-    );
+    const result = resolveModelsForType("Explore", routing);
     expect(Array.isArray(result)).toBe(true);
     const models = result as Array<{ model: string; thinking?: string }>;
     expect(models.length).toBe(1);
@@ -344,10 +329,7 @@ describe("resolveModelsForType", () => {
         },
       },
     };
-    const result = resolveModelsForType(
-      "Explore",
-      routing as ModelRoutingConfig,
-    );
+    const result = resolveModelsForType("Explore", routing);
     expect(Array.isArray(result)).toBe(true);
     const models = result as Array<{ model: string; thinking?: string }>;
     expect(models.length).toBe(0);

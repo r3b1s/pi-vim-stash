@@ -9,6 +9,9 @@ catalogs:
     '@biomejs/biome':
       specifier: 2.4.8
       version: 2.4.8
+    '@types/js-yaml':
+      specifier: ^4.0.9
+      version: 4.0.9
     '@types/node':
       specifier: ^24.0.0
       version: 24.13.1
@@ -97,6 +100,40 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.39.4(jiti@2.7.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 2.1.9(@types/node@24.13.1)
+
+  packages/pi-subagents-deterministic:
+    dependencies:
+      '@gotgenes/pi-subagents':
+        specifier: '>=15.0.0'
+        version: 15.0.1(@earendil-works/pi-ai@0.79.0(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.79.0(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-tui@0.79.0)
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.2.0
+    devDependencies:
+      '@earendil-works/pi-ai':
+        specifier: '*'
+        version: 0.79.0(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent':
+        specifier: '*'
+        version: 0.79.0(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-tui':
+        specifier: '*'
+        version: 0.79.0
+      '@sinclair/typebox':
+        specifier: '*'
+        version: 0.34.49
+      '@types/js-yaml':
+        specifier: 'catalog:'
+        version: 4.0.9
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.1
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -686,6 +723,14 @@ packages:
       '@modelcontextprotocol/sdk':
         optional: true
 
+  '@gotgenes/pi-subagents@15.0.1':
+    resolution: {integrity: sha512-abN3zn5XAf4klIQ4JXcaqPEvYU+0amWESI97WjN7XrbwOnnl9E4rHl7/yw/XjCdiabvsw1q7Ijj9pUioKlScaA==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@earendil-works/pi-ai': '>=0.75.0'
+      '@earendil-works/pi-coding-agent': '>=0.75.0'
+      '@earendil-works/pi-tui': '>=0.75.0'
+
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
@@ -999,6 +1044,9 @@ packages:
 
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
+
+  '@types/js-yaml@4.0.9':
+    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -2383,6 +2431,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@gotgenes/pi-subagents@15.0.1(@earendil-works/pi-ai@0.79.0(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-coding-agent@0.79.0(ws@8.21.0)(zod@4.4.3))(@earendil-works/pi-tui@0.79.0)':
+    dependencies:
+      '@earendil-works/pi-ai': 0.79.0(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent': 0.79.0(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-tui': 0.79.0
+      '@sinclair/typebox': 0.34.49
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -2612,6 +2667,8 @@ snapshots:
       tslib: 2.8.1
 
   '@types/estree@1.0.9': {}
+
+  '@types/js-yaml@4.0.9': {}
 
   '@types/json-schema@7.0.15': {}
 

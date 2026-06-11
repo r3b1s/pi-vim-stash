@@ -1,6 +1,6 @@
 {
   "packages/pi-holo-mem": "0.2.0",
   "packages/pi-skill-creator": "0.2.1",
-  "packages/pi-token-killer": "0.3.0",
+  "packages/pi-token-killer": "0.3.1",
   "packages/pi-vim-stash": "0.2.0"
 }

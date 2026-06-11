@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/r3b1s/pi-things/compare/pi-token-killer-v0.3.0...pi-token-killer-v0.3.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* **pi-token-killer:** add rtk.md to npm publish files and compress content ([17b242b](https://github.com/r3b1s/pi-things/commit/17b242bf67e5bee762abab24c28de5ed3e69f62b))
+
 ## [0.3.0](https://github.com/r3b1s/pi-things/compare/pi-token-killer-v0.2.0...pi-token-killer-v0.3.0) (2026-06-10)
 
 

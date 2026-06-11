@@ -1,6 +1,6 @@
 {
   "name": "@r3b1s/pi-tmux-sessionizer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Spawn subagents as real pi processes in detached tmux windows — full TUI observability, external control, and session file result extraction.",
   "repository": {
     "type": "git",

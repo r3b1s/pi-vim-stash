@@ -1,6 +1,6 @@
 {
   "name": "@r3b1s/pi-subagents-deterministic",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Deterministic subagent tool that resolves model and thinking from model-routing.yml, replacing pi-subagents' subagent tool via name collision.",
   "repository": {
     "type": "git",

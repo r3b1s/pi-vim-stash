@@ -1,6 +1,6 @@
 {
-  "packages/pi-subagents-deterministic": "0.1.0",
-  "packages/pi-tmux-sessionizer": "0.1.0",
+  "packages/pi-subagents-deterministic": "0.2.0",
+  "packages/pi-tmux-sessionizer": "0.2.0",
   "packages/pi-holo-mem": "0.2.0",
   "packages/pi-skill-creator": "0.2.1",
   "packages/pi-token-killer": "0.3.1",

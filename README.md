@@ -6,6 +6,7 @@ A pnpm workspace monorepo for conveniently developing [Pi](https://pi.dev/) exte
 
 | Package | npm name | Description |
 |---------|----------|-------------|
+| [`packages/pi-tmux-sessionizer`](packages/pi-tmux-sessionizer/) | `@r3b1s/pi-tmux-sessionizer` | Spawn subagents as real `pi` processes in detached tmux windows — full TUI observability, external control, and session file result extraction |
 | [`packages/pi-skill-creator`](packages/pi-skill-creator/) | `@r3b1s/pi-skill-creator` | Pi-native skill creator extension and bundled skill workflow |
 | [`packages/pi-vim-stash`](packages/pi-vim-stash/) | `@r3b1s/pi-vim-stash` | Vim-style modal editing with prompt stash for pi's TUI editor |
 | [`packages/pi-token-killer`](packages/pi-token-killer/) | `@r3b1s/pi-token-killer` | RTK (Rust Token Killer) extension — routes eligible bash commands through rtk |
@@ -16,6 +17,9 @@ A pnpm workspace monorepo for conveniently developing [Pi](https://pi.dev/) exte
 Install any package using the Pi CLI:
 
 ```bash
+# Tmux-based subagent spawning with full TUI observability
+pi install npm:@r3b1s/pi-tmux-sessionizer
+
 # Holographic memory for agents
 pi install npm:@r3b1s/pi-holo-mem
 
@@ -30,6 +34,7 @@ pi install npm:@r3b1s/pi-vim-stash
 ```
 
 > **Note:** `pi-holo-mem` requires Python 3 with `venv` and `pip` installed. The extension automatically creates and manages its own Python virtual environment on first use.
+> **Note:** `pi-tmux-sessionizer` requires `tmux` on your system. Install with `apt install tmux` (Debian/Ubuntu), `brew install tmux` (macOS), or `dnf install tmux` (Fedora).
 
 ## Development Setup
 
@@ -77,6 +82,9 @@ pnpm --filter @r3b1s/pi-vim-stash run check
 
 # Run tests for a single package
 pnpm --filter @r3b1s/pi-skill-creator run test
+
+# Build a single package (produces dist/ with compiled JS + declarations)
+pnpm --filter @r3b1s/pi-tmux-sessionizer run build
 ```
 
 ## Toolchain
@@ -98,5 +106,6 @@ See [`toolchain-research.md`](toolchain-research.md) for deferred tools (fallow,
 Each package retains its own license:
 - `pi-holo-mem`: MIT
 - `pi-skill-creator`: Apache-2.0
+- `pi-tmux-sessionizer`: MIT
 - `pi-vim-stash`: MIT
 - `pi-token-killer`: MIT

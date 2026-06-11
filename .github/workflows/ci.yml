@@ -30,6 +30,9 @@ jobs:
       - name: Typecheck
         run: pnpm -r run check
 
+      - name: Build
+        run: pnpm -r run build
+
       - name: Lint (biome)
         run: pnpm exec biome check .
 

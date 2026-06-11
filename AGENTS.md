@@ -69,6 +69,46 @@ chore(scope): description
 
 Scope is typically the package name (`pi-vim-stash`, `pi-token-killer`, etc.) or `repo` for monorepo-level changes.
 
+## CI/CD
+
+GitHub Actions is the mandated CI platform. All CI workflows live in `.github/workflows/`.
+
+### Local Workflow Testing with `act`
+
+Use [`act`](https://github.com/nektos/act) to test GitHub Actions workflows locally before pushing. It is installed on the local development system.
+
+```bash
+# Run the full CI workflow (default event: push)
+act
+
+# Run the CI workflow with pull_request event (mimics PR checks)
+act pull_request
+
+# Run a specific job (e.g., just the `check` job)
+act -j check
+
+# Dry-run: list what would execute without actually running
+act -n
+
+# Rebuild the act runner image (useful after workflow changes)
+act --rebuild
+
+# Watch mode — re-run on file changes
+act --watch
+
+# Supply a real GitHub token only if the workflow makes authenticated
+# API calls (e.g., creating releases, accessing private repos)
+act -s GITHUB_TOKEN=$(gh auth token)
+```
+
+> **Note:** `act` auto-generates a fake `GITHUB_TOKEN` by default — the standard CI jobs in this repo (`check`, lint, test) work fine without a real one. You only need `-s GITHUB_TOKEN=$(gh auth token)` for workflows that make authenticated GitHub API calls or access private repositories.
+
+### Adding a New Workflow
+
+1. Create `.github/workflows/<name>.yml`
+2. Test locally with `act` before committing
+3. Verify it runs correctly on push/PR after merge
+
 ## Package-Level Openspec
 
 Each package may have its own `openspec/` directory. `cd` into the package dir to work with package-level specs. Running from repo root sees monorepo specs; running from a package dir sees that package's specs.

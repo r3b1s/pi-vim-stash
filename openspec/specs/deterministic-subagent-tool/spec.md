@@ -39,22 +39,27 @@ The `subagent` tool's parameter schema SHALL NOT include `model` or `thinking` f
 
 ### Requirement: Model and thinking resolved from model-routing.yml
 
-When the `subagent` tool executes, it SHALL read `agent/model-routing.yml` from the pi config directory, map the `subagent_type` to a role, and use the first model in that role's ordered model list. It SHALL also apply the role's configured thinking level (with per-model override support). On spawn failure, it SHALL iterate the ordered model list.
+When the `subagent` tool executes, it SHALL read `agent/model-routing.yml` from the pi config directory and perform a case-insensitive direct match of the `subagent_type` against YAML role keys. It SHALL use the first model in the matched role's ordered model list and apply the role's configured thinking level (with per-model override support). On spawn failure, it SHALL iterate the ordered model list. No translation table (TYPE_TO_ROLE) SHALL exist.
 
 #### Scenario: Explorer agent gets cheap model with low thinking
 
 - **WHEN** the LLM calls `subagent(subagent_type: "Explore", ...)`
-- **THEN** the tool SHALL map `Explore` to the `explorer` role and use the first model in `model-routing.yml` under `roles.explorer.models` with `roles.explorer.thinking`
+- **THEN** the tool SHALL case-insensitively match `Explore` against YAML role keys and use the first model under the matched key with the role's configured `thinking`
 
 #### Scenario: Implementer agent gets high thinking
 
 - **WHEN** the LLM calls `subagent(subagent_type: "implementer", ...)`
-- **THEN** the tool SHALL map `implementer` to the `implementer` role and apply `roles.implementer.thinking` as the thinking level
+- **THEN** the tool SHALL case-insensitively match `implementer` against YAML role keys and apply the matched role's `thinking` level
 
-#### Scenario: Unknown agent type requires explicit mapping
+#### Scenario: Case-insensitive match
 
-- **WHEN** the LLM calls `subagent(subagent_type: "custom-agent", ...)` and `custom-agent` is not in the type-to-role mapping
-- **THEN** the tool SHALL return an error: "No routing config found for agent type custom-agent. Add a role entry to model-routing.yml."
+- **WHEN** the LLM calls `subagent(subagent_type: "EXPLORE", ...)` and YAML has key `explore`
+- **THEN** the tool SHALL match `EXPLORE` to `explore` via case-insensitive comparison
+
+#### Scenario: Unknown agent type returns error
+
+- **WHEN** the LLM calls `subagent(subagent_type: "custom-agent", ...)` and no YAML role key matches `custom-agent` (case-insensitive)
+- **THEN** the tool SHALL log a warning to console and return an error: "No routing config found for role: custom-agent"
 
 ### Requirement: Model fallback on spawn failure
 
@@ -77,42 +82,37 @@ When `SubagentsService.spawn()` fails (model unavailable, rate-limited, provider
 
 ### Requirement: Tool delegates to SubagentsService
 
-The `subagent` tool's `execute` function SHALL call `@gotgenes/pi-subagents`' `SubagentsService.spawn()` with the resolved model and thinking level (mapped to `thinkingLevel`), passing through all other parameters (`subagent_type`, `prompt`, `description`, `run_in_background`, `inherit_context`, `max_turns`, `resume`).
+The `subagent` tool's `execute` function SHALL call `@gotgenes/pi-subagents`' `SubagentsService.spawn()` with the resolved model and thinking level (mapped to `thinkingLevel`), passing through all other parameters (`subagent_type`, `prompt`, `description`, `run_in_background`, `inherit_context`, `max_turns`). The `resume` parameter SHALL NOT be accepted.
 
 #### Scenario: SubagentsService receives resolved model
 
-- **WHEN** the tool resolves model `deepseek-v4-flash` for an `Explore` agent
-- **THEN** `SubagentsService.spawn()` SHALL be called with `options.model` set to the resolved model identifier
+- **WHEN** the tool resolves model `deepseek-v4-flash` for an agent
+- **THEN** `SubagentsService.spawn()` SHALL be called with `options.model` set to `"deepseek-v4-flash"`
 
 #### Scenario: Background-only execution returns agent ID
 
-- **WHEN** the LLM calls `subagent` with `run_in_background: true`
-- **THEN** the tool SHALL spawn via `SubagentsService.spawn()` in background mode and return the agent ID for later retrieval via `get_subagent_result`
-
-#### Scenario: Foreground calls also return agent ID (MVP limitation)
-
 - **WHEN** the LLM calls `subagent` without `run_in_background`
-- **THEN** the tool SHALL spawn via `SubagentsService.spawn()` and return the agent ID (background-only MVP; foreground streaming deferred)
+- **THEN** the tool SHALL spawn via `SubagentsService.spawn()` without setting `foreground` and return the agent ID for later retrieval via `get_subagent_result`
+
+#### Scenario: Explicit foreground spawn
+
+- **WHEN** the LLM calls `subagent` with `run_in_background: false`
+- **THEN** the tool SHALL spawn via `SubagentsService.spawn()` with `options.foreground = true`
+
+#### Scenario: Explicit background spawn
+
+- **WHEN** the LLM calls `subagent` with `run_in_background: true`
+- **THEN** the tool SHALL spawn via `SubagentsService.spawn()` without setting `foreground`
 
 #### Scenario: Success return contains agent ID
 
 - **WHEN** the tool successfully spawns a subagent
 - **THEN** it SHALL return a text result containing the agent ID for retrieval via `get_subagent_result`
 
-#### Scenario: Valid resume parameter resumes existing agent
+#### Scenario: resume parameter not accepted
 
-- **WHEN** the `resume` parameter contains a valid agent ID
-- **THEN** the tool SHALL resume the existing agent via `SubagentsService`
-
-#### Scenario: Invalid resume parameter returns error
-
-- **WHEN** the `resume` parameter contains an invalid agent ID
-- **THEN** the tool SHALL return an error indicating the agent was not found
-
-#### Scenario: Resume conflicts with prompt parameter
-
-- **WHEN** `resume` is combined with a conflicting `prompt` parameter
-- **THEN** the tool SHALL return an error about conflicting parameters
+- **WHEN** the LLM calls `subagent` with `resume` parameter
+- **THEN** the tool SHALL ignore the `resume` value (SubagentsService has no resume API)
 
 ### Requirement: thinking mapped to thinkingLevel internally
 

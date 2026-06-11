@@ -9,6 +9,7 @@
   },
   "files": [
     "src",
+    "rtk.md",
     "README.md",
     "LICENSE"
   ],

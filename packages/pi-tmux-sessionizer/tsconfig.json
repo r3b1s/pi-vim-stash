@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "#src/*": ["./src/*"],
+      "#test/*": ["./test/*"],
+      "@r3b1s/pi-subagents-deterministic": [
+        "../pi-subagents-deterministic/src/index.ts"
+      ]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

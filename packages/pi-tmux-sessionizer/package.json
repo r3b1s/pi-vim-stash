@@ -1,0 +1,82 @@
+{
+  "name": "@r3b1s/pi-tmux-sessionizer",
+  "version": "0.1.0",
+  "description": "Spawn subagents as real pi processes in detached tmux windows — full TUI observability, external control, and session file result extraction.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r3b1s/pi-things.git",
+    "directory": "packages/pi-tmux-sessionizer"
+  },
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "tmux",
+    "subagents",
+    "observability"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "imports": {
+    "#src/*": {
+      "types": "./src/*.ts",
+      "default": "./dist/*.js"
+    },
+    "#test/*": "./test/*.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && rm -rf dist/pi-subagents-deterministic dist/pi-tmux-sessionizer",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "biome check src/ test/",
+    "format": "biome check --write src/ test/"
+  },
+  "pi": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "@sinclair/typebox": "*",
+    "@r3b1s/pi-subagents-deterministic": "*"
+  },
+  "peerDependenciesMeta": {
+    "@r3b1s/pi-subagents-deterministic": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "@sinclair/typebox": "*",
+    "@types/js-yaml": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

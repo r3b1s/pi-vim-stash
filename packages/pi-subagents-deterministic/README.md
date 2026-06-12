@@ -1,16 +1,36 @@
 # @r3b1s/pi-subagents-deterministic
 
-Deterministic subagent tool for Pi — resolves model and thinking level from `model-routing.yml`, removing the LLM from routing decisions.
+Deterministic subagent routing for Pi — resolves model and thinking level from `model-routing.yml` and injects them into pi-subagents' `subagent` tool calls via Pi's `tool_call` hook.
 
 ## Overview
 
-This Pi extension registers three LLM-callable tools:
+This Pi extension registers one LLM-callable tool:
 
-- **`subagent`** (deterministic) — automatically resolves model and thinking level from `agent/model-routing.yml`. No `model` or `thinking` parameters exposed to the LLM. On spawn failure, iterates the role's ordered model list.
 - **`subagent_manual`** (escape hatch) — accepts explicit `model` and `thinking` parameters, bypassing `model-routing.yml`. Use when you need a specific model or thinking level.
-- **`get_subagent_result`** (non-blocking) — retrieves the result of a spawned subagent. Always returns immediately; call again if the agent is still running.
 
-The deterministic `subagent` tool intentionally overrides pi-subagents' `subagent` tool via name collision in Pi's tool registry.
+The `subagent` tool is **not** registered by PSD. Instead, PSD hooks Pi's `tool_call` event for `toolName === "subagent"` and injects deterministic `model` and `thinking` values into `event.input` before pi-subagents' native `subagent` tool executes. This means:
+
+- No tool-registration conflicts with pi-subagents (first-writer-wins is irrelevant).
+- Every `subagent` call is automatically routed according to `model-routing.yml` — the LLM cannot override the model or thinking level through the `subagent` tool.
+- The `subagent_manual` escape hatch remains available for explicit override.
+
+PSD also exports `setSpawner()` and `setResultProvider()` for API stability with downstream consumers such as pi-tmux-sessionizer.
+
+## Architecture
+
+PSD intercepts `subagent` tool calls using Pi's `tool_call` event hook:
+
+1. When the LLM calls `subagent`, Pi fires a `tool_call` event before the registered tool executes.
+2. PSD's hook handler catches events where `event.toolName === "subagent"`.
+3. The handler reads `agent/model-routing.yml` from the Pi config directory (`~/.pi/` or `$PI_CODING_AGENT_DIR`).
+4. It resolves the first model and the thinking level for the requested `subagent_type` from the YAML (case-insensitive role matching).
+5. It mutates `event.input.model` and `event.input.thinking` with the resolved values — always overwriting any values the LLM may have set.
+6. The call then proceeds to pi-subagents' native `subagent` tool, which accepts `model` and `thinking` as optional parameters and forwards them to `SubagentsService.spawn()`.
+
+The hook blocks the call with a clear error reason if:
+- The YAML file is missing or unparseable.
+- The requested agent type has no matching role in the config.
+- The matching role has an empty models list.
 
 ## Installation
 
@@ -18,24 +38,7 @@ The deterministic `subagent` tool intentionally overrides pi-subagents' `subagen
 pi install npm:@r3b1s/pi-subagents-deterministic
 ```
 
-### Load Order
-
-This extension **must be loaded after** `@gotgenes/pi-subagents` in your `settings.json` packages array to ensure the name-collision override works correctly:
-
-```json
-{
-  "packages": [
-    "@gotgenes/pi-subagents",
-    "@r3b1s/pi-subagents-deterministic"
-  ]
-}
-```
-
-All three tools (`subagent`, `subagent_manual`, `get_subagent_result`) are registered unconditionally.
-
-When neither pi-subagents nor a custom spawner (e.g. pi-tmux-sessionizer) is available, tool calls return a clear error instructing installation.
-
-When pi-tmux-sessionizer is loaded, it injects a `ResultProvider` via `setResultProvider()` from PSD. This ensures `get_subagent_result` delegates to PTS's tracker even when PSD registered the tool first (first-writer-wins registry).
+PSD can be loaded **before or after** `@gotgenes/pi-subagents` — the hook fires regardless of load order.
 
 ## Configuration
 
@@ -65,6 +68,8 @@ roles:
       - cheap-model
 ```
 
+> **Note:** The hook always overwrites `model` and `thinking` on the `subagent` tool call with the resolved config values. Even if the LLM provides these parameters in its call, the routing config is authoritative.
+
 ### Role Mapping
 
 YAML role keys are matched **case-insensitively** against the `subagent_type` value passed by the LLM. Any agent type name works as a role key — there is no hardcoded translation table. For example, `subagent_type: "Explore"` matches the `Explore`, `explore`, or `EXPLORE` role key.
@@ -88,7 +93,7 @@ Unknown agent types return an explicit error — there is no silent fallback.
 
 ### Deterministic (preferred)
 
-The LLM calls `subagent` with only task-related parameters:
+The LLM calls `subagent` (pi-subagents' native tool) with only task-related parameters:
 
 ```json
 {
@@ -98,11 +103,11 @@ The LLM calls `subagent` with only task-related parameters:
 }
 ```
 
-Model and thinking level are resolved from `model-routing.yml` automatically.
+Model and thinking level are resolved from `model-routing.yml` automatically by the hook — no explicit `model` or `thinking` parameters needed.
 
 ### Manual override
 
-When the LLM needs a specific model or thinking level:
+When the LLM needs to bypass the routing config, it calls `subagent_manual`:
 
 ```json
 {
@@ -114,24 +119,24 @@ When the LLM needs a specific model or thinking level:
 }
 ```
 
-## Composition with pi-tmux-sessionizer
+`subagent_manual` is the only tool PSD registers. It accepts explicit `model` and `thinking` parameters and does not go through the hook.
 
-Install both packages for best observability:
+## Behavior with pi-tmux-sessionizer
 
-```bash
-pi install npm:@r3b1s/pi-subagents-deterministic
-pi install npm:@r3b1s/pi-tmux-sessionizer
-```
+When both PSD and pi-tmux-sessionizer (PTS) are installed, PTS calls `setSpawner()` to inject a tmux-based spawner. However, the deterministic `subagent` path does **not** use PSD's spawner — the hook only mutates `event.input` and lets pi-subagents' tool perform the actual spawn via `SubagentsService.spawn()`. As a result:
 
-When both are installed, PTS detects PSD during initialization and injects a custom tmux-based spawner via `setSpawner()`. The routing is:
+- **`setSpawner` is a no-op for deterministic `subagent` calls.** The hook does not call spawners; it only injects routing values.
+- `subagent_manual` still routes through PTS's spawner when one is set, preserving tmux observability for manual override calls.
+- Users who want tmux observability for deterministic routing should use `subagent_manual` with the desired model and thinking level explicitly specified.
 
-- **spawning route**: PSD's `subagent` tool resolves model/thinking from `model-routing.yml`, then delegates the actual spawn to PTS's tmux spawner. Each subagent runs in a dedicated tmux window with full TUI.
-- **result retrieval**: PSD's `get_subagent_result` always handles the `get_subagent_result` tool (first-writer-wins). PTS injects a `ResultProvider` via `setResultProvider()` so PSD's tool delegates to PTS's in-memory tracker. When no provider is set, PSD falls back to its SubagentsService-based lookup.
-- **spawn fallback**: When PTS is installed but tmux is unavailable on the system, PSD's `subagent` tool returns a clear error instructing tmux installation. No dangling config or silent degradation.
+## Behavior with `get_subagent_result`
 
-### Standalone mode
+PSD no longer registers a `get_subagent_result` tool. pi-subagents' native `get_subagent_result` tool handles result retrieval for all `subagent` and `subagent_manual` calls.
 
-Without PSD, PTS registers its own `subagent` tool (standalone mode) — no model-routing.yml resolution, direct tmux spawning.
+- **Default behavior**: Non-blocking — the tool returns immediately with `{ done: false }` if the agent is still running.
+- **Opt-in blocking**: Pass `wait: true` to block until the agent completes and return the result.
+
+This is a change from previous PSD versions, which always returned immediately without a `wait` option. The default non-blocking behavior is preserved; the LLM can opt in to blocking when needed.
 
 ## Dependencies
 

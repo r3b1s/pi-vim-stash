@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/r3b1s/pi-things/compare/pi-tmux-sessionizer-v0.2.0...pi-tmux-sessionizer-v0.2.1) (2026-06-12)
+
+
+### Documentation
+
+* add load order and acronyms to READMEs and AGENTS.md ([a4648d0](https://github.com/r3b1s/pi-things/commit/a4648d072c3e6ba03e08597166da389a75884e55))
+
 ## [0.2.0](https://github.com/r3b1s/pi-things/compare/pi-tmux-sessionizer-v0.1.0...pi-tmux-sessionizer-v0.2.0) (2026-06-11)
 
 

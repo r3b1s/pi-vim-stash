@@ -1,6 +1,6 @@
 {
   "name": "@r3b1s/pi-subagents-deterministic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Deterministic subagent routing via Pi's tool_call hook — resolves model and thinking from model-routing.yml and injects them into pi-subagents' subagent tool calls.",
   "repository": {
     "type": "git",

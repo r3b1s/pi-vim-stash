@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/r3b1s/pi-things/compare/pi-subagents-deterministic-v0.2.0...pi-subagents-deterministic-v0.3.0) (2026-06-12)
+
+
+### Features
+
+* **pi-subagents-deterministic:** switch from tool-registration to tool_call hook routing ([8550825](https://github.com/r3b1s/pi-things/commit/8550825b0f8ceb979cdbea44acad7e2821cb1e8f))
+
 ## [0.2.0](https://github.com/r3b1s/pi-things/compare/pi-subagents-deterministic-v0.1.0...pi-subagents-deterministic-v0.2.0) (2026-06-11)
 
 

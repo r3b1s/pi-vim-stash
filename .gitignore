@@ -64,15 +64,3 @@ Thumbs.db
 pnpm-debug.log*
 **/package-lock.json
 .pnpm-store/
-
-# OpenSpec changes (keep tracked)
-# openspec/changes/ is version-controlled
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-venv/
-.venv/

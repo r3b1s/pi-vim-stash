@@ -1,113 +1,134 @@
-![pi-things-banner.png](https://raw.githubusercontent.com/r3b1s/media-assets/refs/heads/main/pi-things/pi-things-banner.png)
+# pi-vim-stash
 
-A pnpm workspace monorepo for conveniently developing [Pi](https://pi.dev/) extensions. Credit to [@gotgenes](https://github.com/gotgenes) for inspiring the toolchain and monorepo shape with [their own monorepo](https://github.com/gotgenes/pi-packages/).
+Vim-style modal editing with prompt stash for [pi](https://github.com/earendil-works/pi)'s TUI editor.
 
-## Extensions
+A fused extension combining [pi-vim](https://github.com/lajarre/pi-vim) (modal editor) and [pi-stash](https://github.com/maxpetretta/pi-stash) (prompt stash) into a single package.
 
-| Package | npm name | Description |
-|---------|----------|-------------|
-| [`packages/pi-subagents-deterministic`](packages/pi-subagents-deterministic/) | `@r3b1s/pi-subagents-deterministic` (PSD) | Deterministic subagent routing with pluggable spawner interface. Requires [`@gotgenes/pi-subagents`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-subagents) |
-| [`packages/pi-tmux-sessionizer`](packages/pi-tmux-sessionizer/) | `@r3b1s/pi-tmux-sessionizer` (PTS) | Spawn subagents as real `pi` processes in detached tmux windows — full TUI observability, external control, and session file result extraction. Requires [`@gotgenes/pi-subagents`](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-subagents) |
-| [`packages/pi-skill-creator`](packages/pi-skill-creator/) | `@r3b1s/pi-skill-creator` | Pi-native skill creator extension and bundled skill workflow |
-| [`packages/pi-vim-stash`](packages/pi-vim-stash/) | `@r3b1s/pi-vim-stash` | Vim-style modal editing with prompt stash for pi's TUI editor. Fusion of [pi-vim](https://github.com/lajarre/pi-vim) and [pi-stash](https://github.com/maxpetretta/pi-stash) — credit to [@lajarre](https://github.com/lajarre) and [@maxpetretta](https://github.com/maxpetretta) |
-| [`packages/pi-token-killer`](packages/pi-token-killer/) | `@r3b1s/pi-token-killer` | [RTK](https://github.com/rtk-ai/rtk) (Rust Token Killer) extension — routes eligible bash commands through `rtk` |
-| [`packages/pi-holo-mem`](packages/pi-holo-mem/) | `@r3b1s/pi-holo-mem` | Holographic memory — structured fact storage with compositional reasoning via HRR algebra. Implements the verbatim python code for the Holographic memory plugin from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent). |
+## Design Principles
 
-### Installation
+- **Minimal external dependencies.** The only declared dependencies are the pi platform peer packages (`@earendil-works/pi-coding-agent`, `@earendil-works/pi-tui`). Clipboard access uses the native Rust addon (`@mariozechner/clipboard`) that is already a transitive dependency of `@earendil-works/pi-coding-agent`, accessed via `createRequire` — no additional dependencies are declared. No other runtime dependencies.
+- **No code from deprecated package namespaces in direct imports.** All direct imports use only the `@earendil-works` namespace.
 
-Install any package using the Pi CLI:
+## Features
+
+### Vim modal editing
+
+Full modal text editing inside pi's TUI editor:
+
+- **Normal mode** — navigate with `h`/`j`/`k`/`l`, `w`/`b`/`e`, `{`/`}`, `gg`/`G`, `%`, `f`/`F`/`t`/`T`, and more
+- **Insert mode** — `i`, `I`, `a`, `A`, `o`, `O`, `c`, `C`, `s`, `S` to enter
+- **Operators** — `d` (delete), `y` (yank), `c` (change), `g~` (swap case), `gu`/`gU` (lower/upper), `>`/`<` (indent), `=` (format)
+- **Visual modes** — `v` (character), `V` (line), `Ctrl+V` (block)
+- **Registers** — `"a`..`"z` named registers, `"0` (last yank), `"` (unnamed), `"+` (system clipboard)
+- **Macros** — `q<register>` to record, `q` or `<Esc>` to stop, `@<register>` to replay
+- **Undo/redo** — `u`/`Ctrl+R` with branching history
+- **Motions** — character, word, paragraph, matching pair, line-relative, scroll-based
+- **Text objects** — `iw`/`aw` (word), `iW`/`aW` (WORD), `i"`/`a"` (quoted), `i(`/`a(` (bracketed)
+- **Ex commands** — `:w` (write prompt), `:q` (quit), `:e` (edit/rerun)
+- **Count prefixes** — `3dw`, `2j`, etc.
+- **Clipboard integration** — yank/paste to/from system clipboard via native platform commands
+- **Cursor shape** — block cursor in normal mode, beam cursor in insert mode
+- **Mode-specific border/label colors** — configurable via settings
+
+### Prompt stash
+
+Temporarily shelve a prompt draft and restore it later, inspired by Claude Code:
+
+**`Ctrl+S`** (configurable) —
+- **Editor has content**: saves the current draft to `.pi/stash.md`, clears the editor
+- **Editor is empty**: restores the stashed draft back into the editor
+
+The stash also auto-restores after the next prompt submission, letting you shelve one prompt, send another, and pick up where you left off.
+
+## Install
 
 ```bash
-# Tmux-based subagent spawning with full TUI observability
-pi install npm:@r3b1s/pi-tmux-sessionizer
-
-# Holographic memory for agents
-pi install npm:@r3b1s/pi-holo-mem
-
-# Skill creation, improvement, and review
-pi install npm:@r3b1s/pi-skill-creator
-
-# Token-optimized CLI proxy (60-90% savings)
-pi install npm:@r3b1s/pi-token-killer
-
-# Vim-style modal editing with prompt stash
 pi install npm:@r3b1s/pi-vim-stash
 ```
 
-> **Note:** `pi-holo-mem` requires Python 3 with `venv` and `pip` installed. The extension automatically creates and manages its own Python virtual environment on first use.
-> **Note:** `pi-tmux-sessionizer` requires `tmux` on your system. Install with `apt install tmux` (Debian/Ubuntu), `brew install tmux` (macOS), or `dnf install tmux` (Fedora).
-> **Note:** Load order: `@gotgenes/pi-subagents` loads before PSD, which loads before PTS. This is the default alphabetical order — no config change needed.
-
-## Development Setup
-
-### Prerequisites
-
-- [mise](https://mise.jdx.dev/) — tool version manager + task runner
-
-### Install
+Or straight from this repo:
 
 ```bash
-# Install tools (node 22, pnpm 9)
-mise install
+pi install git:github.com/r3b1s/pi-vim-stash
+```
 
-# Install dependencies
+## Usage
+
+Once installed, pi automatically activates Vim-style modal editing in the TUI editor.
+
+### Stash examples
+
+```text
+# While editing a long prompt, hit Ctrl+S to stash it
+# → "Stashed prompt (auto-restores after submit)"
+
+# Type and send a quick different prompt
+# → Stash auto-restores into the editor
+
+# Or clear the editor and hit Ctrl+S again
+# → "Restored stashed prompt to the editor"
+```
+
+### Configuration
+
+Set your preferred stash shortcut in `~/.pi/agent/keybindings.json`:
+
+```json
+{
+  "pi-vim-stash.shortcut": "alt+s",
+  "app.session.toggleSort": ["ctrl+s"]
+}
+```
+
+Vim settings go under the `piVim` key in `~/.pi/agent/settings.json` or project `.pi/settings.json`:
+
+```json
+{
+  "piVim": {
+    "clipboardMirror": false,
+    "modeColors": {
+      "normal": "borderAccent",
+      "insert": "borderMuted",
+      "ex": "warning"
+    },
+    "syncBorderColorWithMode": true
+  }
+}
+```
+
+Settings are read from global settings first, then per-project settings override.
+
+## Package structure
+
+```
+src/
+├── index.ts                  # Extension entry point, ModalEditor class (~3400 lines)
+├── stash.ts                  # Prompt stash/restore shortcut and hooks
+├── motions.ts                # Motion calculation utilities
+├── text-objects.ts           # Text object range resolution
+├── word-boundary-cache.ts    # Word boundary cache (performance)
+├── settings.ts               # Settings reader (piVim config key)
+├── clipboard-policy.ts       # Clipboard mirror policy types/validation
+├── types.ts                  # Shared types and constants
+```
+
+## Development
+
+```bash
+mise install     # tool versions (node, pnpm)
 pnpm install
+pnpm run check   # tsc --noEmit
+pnpm run lint    # biome + eslint
+pnpm run test    # vitest
 ```
 
-### Available Commands
-
-```bash
-# Type checking (all packages)
-pnpm run check
-
-# Linting (Biome + ESLint)
-pnpm run lint
-
-# Tests (all packages)
-pnpm run test
-
-# Format code
-pnpm run format
-
-# Full CI (parallel: check + lint + test)
-mise run ci
-
-# Clean build artifacts
-pnpm run clean
-```
-
-### Per-Package Commands
-
-```bash
-# Type check a single package
-pnpm --filter @r3b1s/pi-vim-stash run check
-
-# Run tests for a single package
-pnpm --filter @r3b1s/pi-skill-creator run test
-
-# Build a single package (produces dist/ with compiled JS + declarations)
-pnpm --filter @r3b1s/pi-tmux-sessionizer run build
-```
-
-## Toolchain
-
-| Tool | Purpose |
-|------|---------|
-| pnpm 11 | Package manager + workspaces |
-| TypeScript (ES2024) | Type checking |
-| Biome | Formatting + non-type-aware lint |
-| ESLint | Type-aware lint only |
-| Vitest | Test runner |
-| mise | Tool versions + task runner |
-| release-please | Automated versioning and changelog generation from conventional commits |
-
-See [`toolchain-research.md`](toolchain-research.md) for deferred tools (fallow, prek, rumdl).
+`scripts/pi-dev` starts an isolated pi environment that loads the extension from this checkout (sources listed in `.pi-dev/dev-sources.json`).
 
 ## License
 
-Each package retains its own license:
-- `pi-holo-mem`: MIT
-- `pi-skill-creator`: Apache-2.0
-- `pi-tmux-sessionizer`: MIT
-- `pi-vim-stash`: MIT
-- `pi-token-killer`: MIT
+MIT — see [LICENSE](./LICENSE).
+
+## Credits
+
+- [pi-vim](https://github.com/lajarre/pi-vim) by lajarre — Vim modal editing for pi
+- [pi-stash](https://github.com/maxpetretta/pi-stash) by Max Petretta — prompt stash for pi

@@ -1,24 +1,63 @@
 {
-  "name": "pi-things",
-  "private": true,
+  "name": "@r3b1s/pi-vim-stash",
+  "version": "0.2.0",
+  "description": "Vim-style modal editing with prompt stash for pi's TUI editor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r3b1s/pi-vim-stash.git"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "vim",
+    "editor",
+    "stash",
+    "pi-coding-agent"
+  ],
+  "imports": {
+    "#src/*": "./src/*",
+    "#test/*": "./test/*"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "lint": "biome check . && eslint src/ test/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "biome check --write .",
+    "clean": "rm -rf dist node_modules coverage"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.8",
+    "@earendil-works/pi-coding-agent": "^0.79.0",
+    "@earendil-works/pi-tui": "0.79.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.25.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.31.1",
+    "vitest": "^2.1.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": ">=0.47.0"
+  },
   "packageManager": "pnpm@11.5.2",
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "check": "pnpm -r run check",
-    "lint": "biome check . && eslint packages/",
-    "test": "pnpm -r run test",
-    "format": "biome check --write .",
-    "clean": "pnpm -r exec rm -rf dist node_modules .turbo"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "catalog:",
-    "@types/node": "catalog:",
-    "eslint": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:",
-    "vitest": "catalog:"
   }
 }

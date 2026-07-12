@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.1...pi-vim-stash-v0.2.2) (2026-07-12)
+
+
+### Miscellaneous Chores
+
+* drop temporary last-release-sha override ([8b49a9e](https://github.com/r3b1s/pi-vim-stash/commit/8b49a9ec0c01ce7be8e7ef48b7bb70a48c51e269))
+
 ## [0.2.1](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.0...pi-vim-stash-v0.2.1) (2026-07-12)
 
 

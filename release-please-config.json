@@ -9,7 +9,6 @@
     "toolchain-research.md",
     "AGENTS.md"
   ],
-  "last-release-sha": "f5fe8c213e6b2537e1a629abe83b2fa73f796763",
   "include-v-in-tag": true,
   "include-component-in-tag": true,
   "release-type": "node",

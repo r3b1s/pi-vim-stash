@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.0...pi-vim-stash-v0.2.1) (2026-07-12)
+
+
+### Miscellaneous Chores
+
+* pin release-please last-release-sha to the monorepo conversion commit ([99f00d3](https://github.com/r3b1s/pi-vim-stash/commit/99f00d352caec84ebae8c433d997ce9f85af2769))
+
 ## [0.2.0](https://github.com/r3b1s/pi-things/compare/pi-vim-stash-v0.1.0...pi-vim-stash-v0.2.0) (2026-06-10)
 
 

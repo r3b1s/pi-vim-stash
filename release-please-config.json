@@ -1,23 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
-    "packages/pi-subagents-deterministic": {
-      "component": "pi-subagents-deterministic"
-    },
-    "packages/pi-tmux-sessionizer": { "component": "pi-tmux-sessionizer" },
-    "packages/pi-holo-mem": { "component": "pi-holo-mem" },
-    "packages/pi-skill-creator": { "component": "pi-skill-creator" },
-    "packages/pi-token-killer": { "component": "pi-token-killer" },
-    "packages/pi-vim-stash": { "component": "pi-vim-stash" }
+    ".": { "component": "pi-vim-stash" }
   },
   "exclude-paths": [
-    ".pi/retros",
-    ".pi/skills",
-    ".pi/prompts",
-    "**/openspec",
+    ".pi-dev/retros",
     "scripts/bin",
     "toolchain-research.md",
-    "**/AGENTS.md"
+    "AGENTS.md"
   ],
   "include-v-in-tag": true,
   "include-component-in-tag": true,

@@ -2,17 +2,18 @@
 pnpm = "11"
 node = "lts"
 python = "3.11"
+usage = "latest"
 
 [env]
 _.path = ["./scripts/bin"]
 
 [tasks.install]
 run = "pnpm install"
-sources = ["pnpm-workspace.yaml", "packages/*/package.json"]
+sources = ["package.json"]
 outputs = ["node_modules/.pnpm/lock.yaml"]
 
 [tasks.check]
-run = "pnpm -r run check"
+run = "pnpm run check"
 depends = ["install"]
 
 [tasks."lint:biome"]
@@ -20,7 +21,7 @@ run = "biome check ."
 depends = ["install"]
 
 [tasks."lint:eslint"]
-run = "eslint packages/"
+run = "eslint src/ test/"
 depends = ["install"]
 
 [tasks.lint]
@@ -28,7 +29,7 @@ run = "pnpm run lint"
 depends = ["install"]
 
 [tasks.test]
-run = "pnpm -r run test"
+run = "pnpm run test"
 depends = ["install"]
 
 [tasks.format]
@@ -39,12 +40,3 @@ depends = ["check", "lint", "test"]
 
 [tasks.clean]
 run = "pnpm run clean"
-
-[tasks."test-python"]
-run = """
-cd packages/pi-holo-mem && \
-python3 -m venv /tmp/pi-holo-mem-test-venv && \
-/tmp/pi-holo-mem-test-venv/bin/pip install --quiet -r python/requirements.txt pytest && \
-/tmp/pi-holo-mem-test-venv/bin/pytest python/tests/ -v && \
-rm -rf /tmp/pi-holo-mem-test-venv
-"""

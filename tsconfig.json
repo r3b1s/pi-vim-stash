@@ -12,6 +12,12 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"]
-  }
+    "types": ["node"],
+    "paths": {
+      "#src/*": ["./src/*"],
+      "#test/*": ["./test/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

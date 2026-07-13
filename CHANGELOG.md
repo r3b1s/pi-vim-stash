@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.4...pi-vim-stash-v0.2.5) (2026-07-13)
+
+
+### Documentation
+
+* credit pi-vim-keys and pi-vimmode for visual mode patterns ([2ae60e9](https://github.com/r3b1s/pi-vim-stash/commit/2ae60e9ec68d2d554164e552f2a306d5dc732f4d))
+
 ## [0.2.4](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.3...pi-vim-stash-v0.2.4) (2026-07-13)
 
 

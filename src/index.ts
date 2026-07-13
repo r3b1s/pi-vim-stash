@@ -72,6 +72,7 @@ const SOFTWARE_CURSOR_RESETS = ["\x1b[0m", "\x1b[27m"] as const;
 const INSERT_CURSOR_SHAPE = "\x1b[5 q";
 const BLOCK_CURSOR_SHAPE = "\x1b[1 q";
 const RESET_CURSOR_SHAPE = "\x1b[0 q";
+const SHOW_HARDWARE_CURSOR = "\x1b[?25h";
 const CLIPBOARD_WRITE_TIMEOUT_MS = PI_NATIVE_CLIPBOARD_TIMEOUT_MS + 500;
 const CLIPBOARD_SPAWN_FAILURE_LIMIT = 3;
 const CLIPBOARD_READ_TIMEOUT_MS = 750;
@@ -117,7 +118,8 @@ type ThemeLike = { fg(token: string, text: string): string };
 type CursorShapeSequence =
   | typeof INSERT_CURSOR_SHAPE
   | typeof BLOCK_CURSOR_SHAPE
-  | typeof RESET_CURSOR_SHAPE;
+  | typeof RESET_CURSOR_SHAPE
+  | typeof SHOW_HARDWARE_CURSOR;
 
 type CursorShapeRuntime = {
   writeCursorShape: (sequence: CursorShapeSequence) => void;
@@ -125,7 +127,7 @@ type CursorShapeRuntime = {
   getShowHardwareCursor?: () => boolean | undefined;
 };
 
-type CursorShapeCleanup = () => void;
+type CursorShapeCleanup = (event?: { reason?: string }) => void;
 
 function resolveModeColors(
   colors?: ModeColorSettings,
@@ -215,9 +217,11 @@ function enableCursorShapeSupport(tui: unknown): CursorShapeCleanup | null {
   const previousShowHardwareCursor = runtime.getShowHardwareCursor?.();
   runtime.setShowHardwareCursor(true);
 
-  return () => {
+  return (event) => {
     runtime.writeCursorShape(RESET_CURSOR_SHAPE);
-    if (previousShowHardwareCursor !== undefined) {
+    if (event?.reason === "quit") {
+      runtime.writeCursorShape(SHOW_HARDWARE_CURSOR);
+    } else if (previousShowHardwareCursor !== undefined) {
       runtime.setShowHardwareCursor(previousShowHardwareCursor);
     }
   };
@@ -3412,9 +3416,9 @@ export default function (pi: ExtensionAPI) {
     });
   });
 
-  pi.on("session_shutdown", () => {
+  pi.on("session_shutdown", (event) => {
     try {
-      cursorShapeCleanup?.();
+      cursorShapeCleanup?.(event);
     } finally {
       cursorShapeCleanup = null;
     }

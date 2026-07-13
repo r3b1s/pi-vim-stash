@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+  type ExtensionAPI,
+  getAgentDir,
+} from "@earendil-works/pi-coding-agent";
 
 export const STASH_FILE = path.join(".pi", "stash.md");
 export const DEFAULT_SHORTCUT = "alt+s";
@@ -51,12 +53,7 @@ function getCwd(cwd?: string): string {
 }
 
 function getKeybindingsPath(): string {
-  return path.join(
-    process.env.HOME ?? os.homedir(),
-    ".pi",
-    "agent",
-    "keybindings.json",
-  );
+  return path.join(getAgentDir(), "keybindings.json");
 }
 
 export function normalizeShortcut(value: unknown): ShortcutKey | null {

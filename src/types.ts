@@ -2,7 +2,7 @@
  * Types and constants for vim-mode extension
  */
 
-export type Mode = "normal" | "insert";
+export type Mode = "normal" | "insert" | "visual" | "visualLine";
 export type CharMotion = "f" | "F" | "t" | "T";
 export type PendingMotion = CharMotion | null;
 export type PendingOperator = "d" | "c" | "y" | null;

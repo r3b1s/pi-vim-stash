@@ -56,6 +56,9 @@ import {
   NEWLINE,
   NORMAL_KEYS,
 } from "./types.js";
+import type { EditorCoordinate } from "./visual.js";
+import { normalizeLineRange, normalizeRange } from "./visual.js";
+import { renderVisualHighlight } from "./visual-render.js";
 import {
   WordBoundaryCache,
   type WordMotionDirection,
@@ -80,6 +83,8 @@ const CLIPBOARD_READ_MAX_BUFFER_BYTES = 1024 * 1024;
 const MODE_COLORS = {
   insert: "borderMuted",
   normal: "borderAccent",
+  visual: "borderAccent",
+  visualLine: "borderAccent",
   ex: "warning",
 } as const;
 const TOKEN = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
@@ -135,6 +140,8 @@ function resolveModeColors(
   return {
     insert: colors?.insert ?? MODE_COLORS.insert,
     normal: colors?.normal ?? MODE_COLORS.normal,
+    visual: colors?.visual ?? MODE_COLORS.visual,
+    visualLine: colors?.visualLine ?? MODE_COLORS.visualLine,
     ex: colors?.ex ?? MODE_COLORS.ex,
   };
 }
@@ -164,6 +171,8 @@ function buildModeColorizers(
   return {
     insert: colorizer("insert"),
     normal: colorizer("normal"),
+    visual: colorizer("visual"),
+    visualLine: colorizer("visualLine"),
     ex: colorizer("ex"),
   };
 }
@@ -634,6 +643,12 @@ class ClipboardMirror {
 
 export class ModalEditor extends CustomEditor {
   private mode: Mode = "insert";
+  private visualAnchor: EditorCoordinate | null = null;
+  private lastVisualSelection: {
+    mode: "visual" | "visualLine";
+    anchor: EditorCoordinate;
+    cursor: EditorCoordinate;
+  } | null = null;
   private pendingMotion: PendingMotion = null;
   private pendingTextObject: TextObjectKind | null = null;
   private pendingOperator: PendingOperator = null;
@@ -1116,6 +1131,11 @@ export class ModalEditor extends CustomEditor {
       return;
     }
 
+    if (this.mode === "visual" || this.mode === "visualLine") {
+      this.handleVisualMode(data);
+      return;
+    }
+
     if ("insert" === this.mode) {
       if (matchesKey(data, Key.shiftAlt("a")) || data === "\x1bA") {
         super.handleInput(CTRL_E);
@@ -1220,6 +1240,11 @@ export class ModalEditor extends CustomEditor {
   }
 
   private handleEscape(): void {
+    if (this.mode === "visual" || this.mode === "visualLine") {
+      this.exitVisual();
+      return;
+    }
+
     if (this.pendingExCommand !== null) {
       this.clearPendingExCommand();
       return;
@@ -1732,6 +1757,11 @@ export class ModalEditor extends CustomEditor {
           return;
         }
 
+        if (data === "v") {
+          this.reselectVisual();
+          return;
+        }
+
         if (data === "J") {
           this.joinLines(false);
           return;
@@ -1982,6 +2012,16 @@ export class ModalEditor extends CustomEditor {
       return;
     }
 
+    if (data === "v") {
+      this.enterVisual("visual");
+      return;
+    }
+
+    if (data === "V") {
+      this.enterVisual("visualLine");
+      return;
+    }
+
     if (Object.hasOwn(NORMAL_KEYS, data)) {
       this.handleMappedKey(data);
       return;
@@ -1989,6 +2029,374 @@ export class ModalEditor extends CustomEditor {
 
     if (this.isPrintableChunk(data)) return;
     super.handleInput(data);
+  }
+
+  // ── Visual mode ──
+
+  private enterVisual(kind: "visual" | "visualLine"): void {
+    const cursor = this.getCursor();
+    this.visualAnchor = { line: cursor.line, col: cursor.col };
+    this.mode = kind;
+    this.clearPendingState();
+  }
+
+  private exitVisual(): void {
+    if (this.visualAnchor) {
+      this.lastVisualSelection = {
+        mode: this.mode as "visual" | "visualLine",
+        anchor: { ...this.visualAnchor },
+        cursor: { ...this.getCursor() },
+      };
+    }
+    this.visualAnchor = null;
+    this.mode = "normal";
+  }
+
+  private reselectVisual(): void {
+    const last = this.lastVisualSelection;
+    if (!last) return;
+
+    const lines = this.getLines();
+    const maxLine = Math.max(0, lines.length - 1);
+    if (
+      last.anchor.line < 0 ||
+      last.anchor.line > maxLine ||
+      last.cursor.line < 0 ||
+      last.cursor.line > maxLine
+    ) {
+      return;
+    }
+
+    const anchorLine = lines[last.anchor.line] ?? "";
+    const cursorLine = lines[last.cursor.line] ?? "";
+    if (
+      last.anchor.col < 0 ||
+      last.anchor.col > anchorLine.length ||
+      last.cursor.col < 0 ||
+      last.cursor.col > cursorLine.length
+    ) {
+      return;
+    }
+
+    this.visualAnchor = { ...last.anchor };
+    this.mode = last.mode;
+    this.moveCursorToCol(last.cursor.col);
+
+    // Also set the line via internal state
+    const editor = this as unknown as {
+      state?: { cursorLine?: number; cursorCol?: number };
+      preferredVisualCol?: number | null;
+      lastAction?: string | null;
+      tui?: { requestRender?: () => void };
+    };
+    if (editor.state) {
+      editor.lastAction = null;
+      editor.state.cursorLine = last.cursor.line;
+      editor.state.cursorCol = last.cursor.col;
+      editor.preferredVisualCol = last.cursor.col;
+      editor.tui?.requestRender?.();
+    }
+  }
+
+  private handleVisualMode(data: string): void {
+    // Resolve pending g- prefix (gg, etc.)
+    if (this.pendingG) {
+      if (this.isDigit(data)) {
+        this.pendingGCount += data;
+        return;
+      }
+      this.pendingG = false;
+      const hadGCount = this.pendingGCount.length > 0;
+      this.pendingGCount = "";
+      if (!hadGCount && data === "g") {
+        this.moveCursorToLineStart(0);
+        return;
+      }
+      // unrecognized g-prefix: fall through to motion checks
+    }
+
+    // Pending text object resolution (iw, aw, i(, a", etc. in visual mode)
+    if (this.pendingTextObject) {
+      this.handleVisualTextObject(data);
+      return;
+    }
+
+    // Count accumulation (prefix) for counted motions
+    if (
+      this.isCountStarter(data) ||
+      (this.prefixCount.length > 0 && this.isDigit(data))
+    ) {
+      this.prefixCount += data;
+      return;
+    }
+
+    // v / V toggle
+    if (data === "v") {
+      if (this.mode === "visualLine") {
+        this.mode = "visual";
+      } else {
+        this.exitVisual();
+      }
+      return;
+    }
+    if (data === "V") {
+      if (this.mode === "visual") {
+        this.mode = "visualLine";
+      } else {
+        this.exitVisual();
+      }
+      return;
+    }
+
+    // o: swap ends
+    if (data === "o") {
+      if (this.visualAnchor) {
+        const oldAnchor = { ...this.visualAnchor };
+        const cursor = this.getCursor();
+        this.visualAnchor = { line: cursor.line, col: cursor.col };
+        this.moveCursorToCol(oldAnchor.col);
+        const editor = this as unknown as {
+          state?: { cursorLine?: number; cursorCol?: number };
+          preferredVisualCol?: number | null;
+          lastAction?: string | null;
+          tui?: { requestRender?: () => void };
+        };
+        if (editor.state) {
+          editor.state.cursorLine = oldAnchor.line;
+          editor.state.cursorCol = oldAnchor.col;
+          editor.preferredVisualCol = oldAnchor.col;
+          editor.tui?.requestRender?.();
+        }
+      }
+      return;
+    }
+
+    const count = this.takeTotalCount(1);
+
+    // Text objects (enter pending state)
+    if (data === "i" || data === "a") {
+      this.pendingTextObject = data;
+      return;
+    }
+
+    // Motions
+    if (data === "h") {
+      this.moveCursorBy(-count);
+      return;
+    }
+    if (data === "l") {
+      this.moveCursorBy(count);
+      return;
+    }
+    if (data === "j") {
+      this.moveCursorVertically(count);
+      return;
+    }
+    if (data === "k") {
+      this.moveCursorVertically(-count);
+      return;
+    }
+    if (data === "w") {
+      this.moveWord("forward", "start", count, "word");
+      return;
+    }
+    if (data === "b") {
+      this.moveWord("backward", "start", count, "word");
+      return;
+    }
+    if (data === "e") {
+      this.moveWord("forward", "end", count, "word");
+      return;
+    }
+    if (data === "W") {
+      this.moveWord("forward", "start", count, "WORD");
+      return;
+    }
+    if (data === "B") {
+      this.moveWord("backward", "start", count, "WORD");
+      return;
+    }
+    if (data === "E") {
+      this.moveWord("forward", "end", count, "WORD");
+      return;
+    }
+    if (data === "$") {
+      const { line } = this.getCurrentLineAndCol();
+      const graphemes = getLineGraphemes(line);
+      this.moveCursorToCol(graphemes[graphemes.length - 1]?.start ?? 0);
+      return;
+    }
+    if (data === "0") {
+      this.moveCursorToCol(0);
+      return;
+    }
+    if (data === "^") {
+      this.moveCursorToFirstNonWhitespace();
+      return;
+    }
+    if (data === "_") {
+      if (count > 1) this.moveCursorVertically(count - 1);
+      this.moveCursorToFirstNonWhitespace();
+      return;
+    }
+    if (data === "G") {
+      if (this.prefixCount.length > 0) {
+        this.moveCursorToLineStart(count - 1);
+      } else {
+        this.moveCursorToBufferEnd();
+      }
+      return;
+    }
+    if (data === "g") {
+      this.pendingGCount = "";
+      this.pendingG = true;
+      return;
+    }
+    if (data === "}" || data === "{") {
+      this.executeParagraphMotion(data === "}" ? "forward" : "backward");
+      return;
+    }
+    if (data === "%") {
+      this.moveToMatchingPairTarget();
+      return;
+    }
+
+    // Character motions (reuse pendingMotion)
+    if (CHAR_MOTION_KEYS.has(data)) {
+      this.pendingMotion = data as PendingMotion;
+      return;
+    }
+    if (data === ";" && this.lastCharMotion) {
+      this.executeCharMotion(
+        this.lastCharMotion.motion,
+        this.lastCharMotion.char,
+        false,
+      );
+      return;
+    }
+    if (data === "," && this.lastCharMotion) {
+      this.executeCharMotion(
+        reverseCharMotion(this.lastCharMotion.motion),
+        this.lastCharMotion.char,
+        false,
+      );
+      return;
+    }
+
+    // Operators
+    if (data === "d" || data === "x") {
+      this.applyVisualDelete("normal");
+      return;
+    }
+    if (data === "c") {
+      this.applyVisualDelete("insert");
+      return;
+    }
+    if (data === "y") {
+      this.applyVisualYank();
+      return;
+    }
+  }
+
+  private applyVisualDelete(nextMode: "normal" | "insert"): void {
+    if (!this.visualAnchor) return;
+
+    const cursor = this.getCursor();
+    const lines = this.getLines();
+
+    if (this.mode === "visualLine") {
+      const { startLine, endLine } = normalizeLineRange(
+        lines,
+        this.visualAnchor,
+        cursor,
+      );
+      const payload = this.getLinewisePayload(startLine, endLine);
+      this.writeToRegister(payload);
+      this.deleteLineRange(startLine, endLine);
+    } else {
+      const range = normalizeRange(lines, this.visualAnchor, cursor);
+      const startAbs = this.getAbsoluteIndex(range.start.line, range.start.col);
+      const endAbs = this.getAbsoluteIndex(range.end.line, range.end.col);
+      this.deleteRangeByAbsolute(startAbs, endAbs, true);
+    }
+
+    this.visualAnchor = null;
+    this.mode = nextMode;
+    this.clearRedoStack();
+  }
+
+  private applyVisualYank(): void {
+    if (!this.visualAnchor) return;
+
+    const cursor = this.getCursor();
+    const lines = this.getLines();
+
+    if (this.mode === "visualLine") {
+      const { startLine, endLine } = normalizeLineRange(
+        lines,
+        this.visualAnchor,
+        cursor,
+      );
+      this.yankLineRange(startLine, endLine);
+      // cursor to start line
+      this.moveCursorToLineStart(startLine);
+    } else {
+      const range = normalizeRange(lines, this.visualAnchor, cursor);
+      const startAbs = this.getAbsoluteIndex(range.start.line, range.start.col);
+      const endAbs = this.getAbsoluteIndex(range.end.line, range.end.col);
+      this.yankRangeByAbsolute(startAbs, endAbs, true);
+      this.moveCursorToAbsoluteIndex(startAbs);
+    }
+
+    this.lastVisualSelection = {
+      mode: this.mode as "visual" | "visualLine",
+      anchor: { ...this.visualAnchor },
+      cursor: { ...cursor },
+    };
+    this.visualAnchor = null;
+    this.mode = "normal";
+  }
+
+  private handleVisualTextObject(data: string): void {
+    const kind = this.pendingTextObject;
+    this.pendingTextObject = null;
+    if (!kind) return;
+
+    const count = this.takeTotalCount(1);
+
+    if (data === "w" || data === "W") {
+      const semanticClass: WordTextObjectClass = data === "W" ? "WORD" : "word";
+      const cursor = this.getCursor();
+      const line = this.getLines()[cursor.line] ?? "";
+      const lineStartAbs = this.getAbsoluteIndex(cursor.line, 0);
+      const range = resolveWordTextObjectRange(
+        line,
+        lineStartAbs,
+        cursor.col,
+        kind,
+        count,
+        semanticClass,
+      );
+      if (range) this.applyVisualTextObjectRange(range);
+      return;
+    }
+
+    const range = resolveDelimitedTextObjectRange(
+      this.getText(),
+      this.getAbsoluteIndexFromCursor(),
+      kind,
+      data,
+    );
+    if (range) this.applyVisualTextObjectRange(range);
+  }
+
+  private applyVisualTextObjectRange(range: TextObjectRange): void {
+    const text = this.getText();
+    const anchor = this.getCursorFromAbsoluteIndex(text, range.startAbs);
+    this.visualAnchor = anchor;
+    this.moveCursorToAbsoluteIndex(
+      Math.min(range.endAbs, Math.max(0, text.length - 1)),
+    );
   }
 
   private openLineBelow(): void {
@@ -3338,6 +3746,22 @@ export class ModalEditor extends CustomEditor {
   render(width: number): string[] {
     const lines = super.render(width);
     this.syncCursorShapeForRender(lines);
+
+    if (
+      (this.mode === "visual" || this.mode === "visualLine") &&
+      this.visualAnchor
+    ) {
+      renderVisualHighlight({
+        editor: this,
+        lines,
+        width,
+        anchor: this.visualAnchor,
+        cursor: this.getCursor(),
+        mode: this.mode,
+        linesSnapshot: this.getLines(),
+      });
+    }
+
     if (lines.length === 0) return lines;
 
     const rawLabel = this.fitModeLabel(this.getModeLabel(), width);
@@ -3368,6 +3792,8 @@ export class ModalEditor extends CustomEditor {
   private getModeLabel(): string {
     if ("insert" === this.mode) return " INSERT ";
     if (this.pendingExCommand !== null) return ` EX ${this.pendingExCommand}_ `;
+    if ("visual" === this.mode) return " VISUAL ";
+    if ("visualLine" === this.mode) return " VISUAL LINE ";
 
     const prefixCount = this.prefixCount;
     const operatorCount = this.operatorCount;

@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 import installPiVim, { ModalEditor } from "../src/index.js";
 import type { WordMotionClass } from "../src/motions.js";
 import { setPiVimSettingsReaderForTests } from "../src/settings.js";
+import type { Mode } from "../src/types.js";
 import type {
   WordMotionDirection,
   WordMotionTarget,
@@ -598,7 +599,7 @@ function runScenario(
 ): {
   text: string;
   register: string;
-  editorMode: "normal" | "insert";
+  editorMode: Mode;
   cursorLine: number;
   cursorCol: number;
 } {
@@ -643,6 +644,8 @@ function assertInsertBorderAfterModeChangingCommand(
     borderColorizers: {
       insert: (s: string) => `<insert>${s}</insert>`,
       normal: (s: string) => `<normal>${s}</normal>`,
+      visual: (s: string) => `<visual>${s}</visual>`,
+      visualLine: (s: string) => `<visualLine>${s}</visualLine>`,
       ex: (s: string) => `<ex>${s}</ex>`,
     },
   });
@@ -870,6 +873,14 @@ describe("ex mini-mode", () => {
       normal: (s: string) => {
         calls.push(`normal:${s}`);
         return `\x1b[34m${s}\x1b[39m`;
+      },
+      visual: (s: string) => {
+        calls.push(`visual:${s}`);
+        return `\x1b[36m${s}\x1b[39m`;
+      },
+      visualLine: (s: string) => {
+        calls.push(`visualLine:${s}`);
+        return `\x1b[36m${s}\x1b[39m`;
       },
       ex: (s: string) => {
         calls.push(`ex:${s}`);
@@ -6395,5 +6406,215 @@ describe("replace — r{char}", () => {
     editor.setRegister("untouched");
     sendKeys(editor, ["r", "a"]);
     expect(editor.getRegister()).toBe("untouched");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Visual mode — enter / exit / toggle
+// ---------------------------------------------------------------------------
+
+describe("visual mode", () => {
+  it("v enters visual char mode", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v"]);
+    expect(editor.getMode()).toBe("visual");
+  });
+
+  it("V enters visual line mode", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["V"]);
+    expect(editor.getMode()).toBe("visualLine");
+  });
+
+  it("escape exits visual back to normal", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "\x1b"]);
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("v in visual exits to normal", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "v"]);
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("V in visualLine exits to normal", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["V", "V"]);
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("v in visualLine switches to visual", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["V", "v"]);
+    expect(editor.getMode()).toBe("visual");
+  });
+
+  it("V in visual switches to visualLine", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "V"]);
+    expect(editor.getMode()).toBe("visualLine");
+  });
+});
+
+describe("visual motions", () => {
+  it("h extends selection left", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["$", "v", "h", "h"]); // go to end, enter visual, left twice
+    expect(editor.getCursor().col).toBe(2); // moved two left from end
+    expect(editor.getMode()).toBe("visual");
+  });
+
+  it("w moves cursor forward word-wise in visual", () => {
+    const { editor } = createEditorWithSpy("hello world");
+    sendKeys(editor, ["v", "w"]);
+    expect(editor.getCursor().col).toBe(6); // start of "world"
+    expect(editor.getMode()).toBe("visual");
+  });
+
+  it("b moves cursor backward word-wise in visual", () => {
+    const { editor } = createEditorWithSpy("hello world");
+    sendKeys(editor, ["w", "v", "b"]); // to "world", visual, back to "hello"
+    expect(editor.getCursor().col).toBe(0); // start of "hello"
+  });
+
+  it("o swaps anchor and cursor", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "$", "o"]);
+    // After v$, cursor is at end, anchor at 0. o swaps them → cursor at 0.
+    expect(editor.getCursor().col).toBe(0);
+  });
+});
+
+describe("visual operators", () => {
+  it("d deletes char selection", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "l", "l", "d"]); // select "hel", delete
+    expect(editor.getText()).toBe("lo");
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("x also deletes char selection", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "l", "l", "x"]);
+    expect(editor.getText()).toBe("lo");
+  });
+
+  it("c changes char selection and enters insert", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "l", "l", "c"]);
+    expect(editor.getText()).toBe("lo");
+    expect(editor.getMode()).toBe("insert");
+  });
+
+  it("y yanks char selection without deleting", () => {
+    const { editor } = createEditorWithSpy("hello");
+    const before = editor.getText();
+    sendKeys(editor, ["v", "l", "l", "y"]);
+    expect(editor.getText()).toBe(before);
+    expect(editor.getRegister()).toBe("hel");
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("d deletes line selection", () => {
+    const { editor } = createMultiLineEditor("a\nb\nc");
+    sendKeys(editor, ["V", "j", "d"]); // select lines 0-1, delete
+    expect(editor.getText()).toBe("c");
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("y yanks line selection", () => {
+    const { editor } = createMultiLineEditor("a\nb\nc");
+    const before = editor.getText();
+    sendKeys(editor, ["V", "j", "y"]);
+    expect(editor.getText()).toBe(before);
+    expect(editor.getRegister()).toBe("a\nb\n");
+  });
+
+  it("c changes line selection and enters insert", () => {
+    const { editor } = createMultiLineEditor("a\nb\nc");
+    sendKeys(editor, ["V", "j", "c"]);
+    expect(editor.getText()).toBe("c");
+    expect(editor.getMode()).toBe("insert");
+  });
+});
+
+describe("gv reselect", () => {
+  it("gv restores last visual selection", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "l", "l", "\x1b"]); // select "hel", exit
+    expect(editor.getMode()).toBe("normal");
+    sendKeys(editor, ["g", "v"]);
+    expect(editor.getMode()).toBe("visual");
+    // Cursor should be at end of previous selection
+    expect(editor.getCursor().col).toBe(2);
+  });
+
+  it("gv no-ops without previous visual selection", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["g", "v"]);
+    expect(editor.getMode()).toBe("normal");
+  });
+});
+
+describe("visual render", () => {
+  it("produces reverse-video highlight in visual mode", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v", "l", "l"]);
+    const lines = editor.render(20);
+    const textLines = lines
+      .slice(1, -1)
+      .filter((l) => !l.includes("─") && !l.includes("VISUAL"));
+    // The text row should contain reverse-video ANSI for selected cells
+    const joined = textLines.join("\n");
+    expect(joined).toContain("\x1b[7m");
+    expect(joined).toContain("\x1b[0m");
+  });
+
+  it("renders VISUAL label in footer", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["v"]);
+    const footer = editor.render(20).at(-1) ?? "";
+    expect(footer).toContain("VISUAL");
+  });
+
+  it("renders VISUAL LINE label for V", () => {
+    const { editor } = createEditorWithSpy("hello");
+    sendKeys(editor, ["V"]);
+    const footer = editor.render(20).at(-1) ?? "";
+    expect(footer).toContain("VISUAL LINE");
+  });
+});
+
+describe("visual text objects", () => {
+  it("viw selects inner word", () => {
+    const { editor } = createEditorWithSpy("hello world");
+    // cursor at col 0 (start of "hello"), enter visual, iw selects "hello"
+    sendKeys(editor, ["v", "i", "w"]);
+    expect(editor.getMode()).toBe("visual");
+    // cursor should be at end of "hello" (col 5, start of space)
+    expect(editor.getCursor().col).toBe(5);
+  });
+
+  it("vaw selects a word with trailing space", () => {
+    const { editor } = createEditorWithSpy("hello world");
+    sendKeys(editor, ["v", "a", "w"]);
+    // "hello " — from col 0 to col 6 (includes trailing space)
+    expect(editor.getCursor().col).toBe(6);
+  });
+
+  it("vi( selects inside parentheses", () => {
+    const { editor } = createEditorWithSpy("a (b) c");
+    sendKeys(editor, ["w", "w", "v", "i", "("]); // cursor at "b", select inside parens
+    // cursor at closing paren col (4), anchor at opening paren+1 (3)
+    const cursor = editor.getCursor();
+    expect(cursor.col).toBe(4); // just before ")"
+  });
+
+  it('va" selects around quotes', () => {
+    const { editor } = createEditorWithSpy('a "b" c');
+    sendKeys(editor, ["w", "w", "v", "a", '"']);
+    // anchor at 2 ("), cursor at 5 (just after closing ")
+    expect(editor.getCursor().col).toBe(5);
   });
 });

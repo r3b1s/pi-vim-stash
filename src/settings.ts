@@ -3,6 +3,8 @@ import { SettingsManager } from "@earendil-works/pi-coding-agent";
 export type ModeColorSettings = {
   insert?: string;
   normal?: string;
+  visual?: string;
+  visualLine?: string;
   ex?: string;
 };
 
@@ -13,7 +15,7 @@ export type PiVimSettings = {
 };
 
 const M = Symbol(),
-  C = ["insert", "normal", "ex"] as const,
+  C = ["insert", "normal", "visual", "visualLine", "ex"] as const,
   T = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 const rec = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);

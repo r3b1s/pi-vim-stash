@@ -656,6 +656,7 @@ export class ModalEditor extends CustomEditor {
   private readonly borderColorizers: ModeColorizers | null;
   private readonly cursorShapeRuntime: CursorShapeRuntime | null;
   private lastCursorShapeSequence: CursorShapeSequence | null = null;
+  private lastLineCache = { l: "", w: 0, label: "", result: "" };
 
   private unnamedRegister: string = "";
   private preferRegisterForPut = false;
@@ -3339,8 +3340,15 @@ export class ModalEditor extends CustomEditor {
     const last = lines.length - 1;
     const lastLine = lines[last];
     if (lastLine && visibleWidth(lastLine) >= visibleWidth(rawLabel)) {
-      lines[last] =
-        truncateToWidth(lastLine, width - visibleWidth(rawLabel), "") + label;
+      const contentWidth = width - visibleWidth(rawLabel);
+      const c = this.lastLineCache;
+      if (lastLine !== c.l || contentWidth !== c.w || label !== c.label) {
+        c.l = lastLine;
+        c.w = contentWidth;
+        c.label = label;
+        c.result = truncateToWidth(lastLine, contentWidth, "") + label;
+      }
+      lines[last] = c.result;
     } else {
       lines[last] = label;
     }

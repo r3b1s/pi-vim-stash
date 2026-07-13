@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.4](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.3...pi-vim-stash-v0.2.4) (2026-07-13)
+
+
+### Bug Fixes
+
+* keep $ motion on last character ([0c778c4](https://github.com/r3b1s/pi-vim-stash/commit/0c778c4a266875e8be7a595bb1731e046b359ebf))
+* restore cursor visibility on quit ([d2541ef](https://github.com/r3b1s/pi-vim-stash/commit/d2541ef8d75287dbcc8b837d40730c34c3945992))
+
+
+### Performance Improvements
+
+* cache last-line mode-label render ([0ea4719](https://github.com/r3b1s/pi-vim-stash/commit/0ea4719a0d28902604cfa4e69443dbf672e6b2be))
+
 ## [0.2.3](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.2...pi-vim-stash-v0.2.3) (2026-07-13)
 
 

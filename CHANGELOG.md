@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.3](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.2...pi-vim-stash-v0.2.3) (2026-07-13)
+
+
+### Bug Fixes
+
+* **stash:** resolve keybindings from PI_CODING_AGENT_DIR ([1358697](https://github.com/r3b1s/pi-vim-stash/commit/1358697377fbfe981364d14e1ad56714e1096771)), closes [#6](https://github.com/r3b1s/pi-vim-stash/issues/6)
+
+
+### Documentation
+
+* correct stash shortcut to Alt+S in README ([9d04305](https://github.com/r3b1s/pi-vim-stash/commit/9d0430520788ce0a00eefbc5eec4d7390f26c27e))
+
 ## [0.2.2](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.1...pi-vim-stash-v0.2.2) (2026-07-12)
 
 

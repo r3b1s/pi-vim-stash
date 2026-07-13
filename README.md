@@ -34,7 +34,7 @@ Full modal text editing inside pi's TUI editor:
 
 Temporarily shelve a prompt draft and restore it later, inspired by Claude Code:
 
-**`Ctrl+S`** (configurable) —
+**`Alt+S`** (configurable) —
 - **Editor has content**: saves the current draft to `.pi/stash.md`, clears the editor
 - **Editor is empty**: restores the stashed draft back into the editor
 
@@ -59,13 +59,13 @@ Once installed, pi automatically activates Vim-style modal editing in the TUI ed
 ### Stash examples
 
 ```text
-# While editing a long prompt, hit Ctrl+S to stash it
+# While editing a long prompt, hit Alt+S to stash it
 # → "Stashed prompt (auto-restores after submit)"
 
 # Type and send a quick different prompt
 # → Stash auto-restores into the editor
 
-# Or clear the editor and hit Ctrl+S again
+# Or clear the editor and hit Alt+S again
 # → "Restored stashed prompt to the editor"
 ```
 

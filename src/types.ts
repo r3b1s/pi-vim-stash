@@ -19,7 +19,7 @@ export const NORMAL_KEYS: Record<string, string | null> = {
   k: "\x1b[A", // up
   l: "\x1b[C", // right
   "0": "\x01", // line start
-  $: "\x05", // line end
+  $: null, // line end
   x: null, // delete char (custom clipboard handling)
   D: null, // delete to end of line (custom clipboard handling)
   C: null, // change to end of line (delete to end + insert mode)

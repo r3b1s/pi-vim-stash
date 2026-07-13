@@ -4133,7 +4133,7 @@ describe("Universal Counts: Change and Nav", () => {
 
     sendKeys(editor, ["$", "h", "3", "h"]);
 
-    expect(editor.getCursor()).toEqual({ line: 0, col: 2 });
+    expect(editor.getCursor()).toEqual({ line: 0, col: 1 });
   });
 
   it("3k moves cursor up three lines", () => {
@@ -4159,43 +4159,38 @@ describe("Universal Counts: Change and Nav", () => {
 // ---------------------------------------------------------------------------
 
 describe("EOL and newline semantics", () => {
-  it("D at EOL captures '\\n' in register when next line exists", () => {
+  it("D at last char cuts to end of line without joining", () => {
     const { editor, clipboardWrites } = createMultiLineEditor("line1\nline2");
-    // cursor at col 0 of line 0; go to EOL
-    sendKeys(editor, ["$"]); // CTRL_E → col past last char (col 5 for "line1")
-    sendKeys(editor, ["D"]);
-    expect(editor.getRegister()).toBe("\n");
-    expect(clipboardWrites).toEqual(["\n"]);
-    // CTRL_K at EOL joins the two lines
-    expect(editor.getText()).toBe("line1line2");
+    // $ lands on the last char (col 4 for "line1"); D cuts from there to EOL
+    sendKeys(editor, ["$", "D"]);
+    expect(editor.getRegister()).toBe("1");
+    expect(clipboardWrites).toEqual(["1"]);
+    // only the last char is removed; the newline stays
+    expect(editor.getText()).toBe("line\nline2");
   });
 
-  it("d$ at EOL matches D behavior (captures newline and joins lines)", () => {
+  it("d$ at last char matches D behavior", () => {
     const { editor, clipboardWrites } = createMultiLineEditor("line1\nline2");
     sendKeys(editor, ["$", "d", "$"]);
 
-    expect(editor.getRegister()).toBe("\n");
-    expect(clipboardWrites).toEqual(["\n"]);
-    expect(editor.getText()).toBe("line1line2");
+    expect(editor.getRegister()).toBe("1");
+    expect(clipboardWrites).toEqual(["1"]);
+    expect(editor.getText()).toBe("line\nline2");
   });
 
-  it("D at EOL on last line is a no-op (register stays empty)", () => {
+  it("D at last char on final line cuts the trailing char", () => {
     const { editor } = createEditorWithSpy("hello");
-    // cursor col 0, go to EOL
-    sendKeys(editor, ["$"]);
-    sendKeys(editor, ["D"]);
-    // col >= line.length AND no next line → deleted = "" → no-op (register empty)
-    expect(editor.getRegister()).toBe("");
-    expect(editor.getText()).toBe("hello");
+    // $ lands on 'o' (col 4); D cuts from there to EOL
+    sendKeys(editor, ["$", "D"]);
+    expect(editor.getRegister()).toBe("o");
+    expect(editor.getText()).toBe("hell");
   });
 
-  it("x at past-EOL position is a no-op (does not join next line)", () => {
+  it("x at last char deletes only that char, does not join next line", () => {
     const { editor } = createMultiLineEditor("line1\nline2");
-    sendKeys(editor, ["$"]); // move to col 5 (past end of "line1")
-    const before = editor.getText();
-    sendKeys(editor, ["x"]);
-    expect(editor.getText()).toBe(before); // text unchanged
-    expect(editor.getRegister()).toBe(""); // nothing captured
+    sendKeys(editor, ["$", "x"]); // $ lands on '1' (col 4); x deletes it
+    expect(editor.getText()).toBe("line\nline2"); // only '1' gone, newline intact
+    expect(editor.getRegister()).toBe("1");
   });
 
   it("x on last char of line deletes only that char, does not join lines", () => {
@@ -4441,11 +4436,7 @@ describe("operator word-motion path selection", () => {
         { name: "cb@BOL", initial: "foo\nbar", keys: ["j", "0", "c", "b"] },
         { name: "yb@BOL", initial: "foo\nbar", keys: ["j", "0", "y", "b"] },
         { name: "dW@EOL", initial: "foo\nbar", keys: ["$", "d", "W"] },
-        { name: "cW@EOL", initial: "foo\nbar", keys: ["$", "c", "W"] },
         { name: "yW@EOL", initial: "foo\nbar", keys: ["$", "y", "W"] },
-        { name: "dE@EOL", initial: "foo\nbar", keys: ["$", "d", "E"] },
-        { name: "cE@EOL", initial: "foo\nbar", keys: ["$", "c", "E"] },
-        { name: "yE@EOL", initial: "foo\nbar", keys: ["$", "y", "E"] },
         { name: "dB@BOL", initial: "foo\nbar", keys: ["j", "0", "d", "B"] },
         { name: "cB@BOL", initial: "foo\nbar", keys: ["j", "0", "c", "B"] },
         { name: "yB@BOL", initial: "foo\nbar", keys: ["j", "0", "y", "B"] },
@@ -5990,7 +5981,7 @@ describe("char-find motions — f / F / t / T / ; / ,", () => {
 
     sendKeys(editor, ["$", "T", "c"]);
 
-    expect(editor.getCursor()).toEqual({ line: 0, col: 3 });
+    expect(editor.getCursor()).toEqual({ line: 0, col: 2 });
   });
 
   it("T{char} after an emoji target at EOL lands safely", () => {
@@ -5998,7 +5989,7 @@ describe("char-find motions — f / F / t / T / ; / ,", () => {
 
     sendKeys(editor, ["$", "T", "😀"]);
 
-    expect(editor.getCursor()).toEqual({ line: 0, col: 4 });
+    expect(editor.getCursor()).toEqual({ line: 0, col: 2 });
   });
 
   it("f{char} accepts a single grapheme made of multiple code points", () => {

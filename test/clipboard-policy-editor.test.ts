@@ -152,7 +152,9 @@ describe("clipboard mirror policy", () => {
       editor.setClipboardMirrorPolicy(policy);
       editor.setClipboardReadFn(() => "SYS");
 
-      sendKeys(editor, ["$", "D", "p"]);
+      // $ lands on 'b'; dl at the last char is a no-op (empty capture), so the
+      // register stays empty and p reads the OS clipboard.
+      sendKeys(editor, ["$", "d", "l", "p"]);
 
       expect(editor.getText()).toBe("abSYS");
       expect(editor.getRegister()).toBe("");

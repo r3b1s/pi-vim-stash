@@ -132,3 +132,5 @@ MIT — see [LICENSE](./LICENSE).
 
 - [pi-vim](https://github.com/lajarre/pi-vim) by lajarre — Vim modal editing for pi
 - [pi-stash](https://github.com/maxpetretta/pi-stash) by Max Petretta — prompt stash for pi
+- [pi-vim-keys](https://github.com/0xKahi/pi-vim-keys) by 0xKahi — visual mode render-overlay pattern and word-wrap parity approach
+- [pi-vimmode](https://github.com/pekochan069/pi-vimmode) by pekochan069 — pure range helpers and visual-selection math for visual mode

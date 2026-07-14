@@ -17,14 +17,13 @@ Full modal text editing inside pi's TUI editor:
 
 - **Normal mode** — navigate with `h`/`j`/`k`/`l`, `w`/`b`/`e`, `{`/`}`, `gg`/`G`, `%`, `f`/`F`/`t`/`T`, and more
 - **Insert mode** — `i`, `I`, `a`, `A`, `o`, `O`, `c`, `C`, `s`, `S` to enter
-- **Operators** — `d` (delete), `y` (yank), `c` (change), `g~` (swap case), `gu`/`gU` (lower/upper), `>`/`<` (indent), `=` (format)
-- **Visual modes** — `v` (character), `V` (line), `Ctrl+V` (block)
-- **Registers** — `"a`..`"z` named registers, `"0` (last yank), `"` (unnamed), `"+` (system clipboard)
-- **Macros** — `q<register>` to record, `q` or `<Esc>` to stop, `@<register>` to replay
+- **Operators** — `d` (delete), `y` (yank), `c` (change)
+- **Visual modes** — `v` (character), `V` (line), `gv` to reselect the last selection
+- **Registers** — unnamed register with optional system-clipboard mirror
 - **Undo/redo** — `u`/`Ctrl+R` with branching history
-- **Motions** — character, word, paragraph, matching pair, line-relative, scroll-based
-- **Text objects** — `iw`/`aw` (word), `iW`/`aW` (WORD), `i"`/`a"` (quoted), `i(`/`a(` (bracketed)
-- **Ex commands** — `:w` (write prompt), `:q` (quit), `:e` (edit/rerun)
+- **Motions** — character, word, paragraph, matching pair, line-relative
+- **Text objects** — `iw`/`aw` (word), `iW`/`aW` (WORD), ``` `i"`/`a"`/`i'`/`a'`/`i``/`a`` ``` (quoted), `i(`/`a(`/`i)`/`a)`/`ib`/`ab`/`i[`/`a[`/`i]`/`a]`/`i{`/`a{`/`i}`/`a}`/`iB`/`aB` (bracketed)
+- **Ex commands** — `:q` / `:qa` (quit), `:q!` / `:qa!` (quit without confirmation)
 - **Count prefixes** — `3dw`, `2j`, etc.
 - **Clipboard integration** — yank/paste to/from system clipboard via native platform commands
 - **Cursor shape** — block cursor in normal mode, beam cursor in insert mode
@@ -67,6 +66,9 @@ Once installed, pi automatically activates Vim-style modal editing in the TUI ed
 
 # Or clear the editor and hit Alt+S again
 # → "Restored stashed prompt to the editor"
+
+# Clear the editor and hit Alt+S when nothing is stashed
+# → "Both the editor and stash are empty"
 ```
 
 ### Configuration
@@ -85,10 +87,12 @@ Vim settings go under the `piVim` key in `~/.pi/agent/settings.json` or project 
 ```json
 {
   "piVim": {
-    "clipboardMirror": false,
+    "clipboardMirror": "all",
     "modeColors": {
       "normal": "borderAccent",
       "insert": "borderMuted",
+      "visual": "borderAccent",
+      "visualLine": "borderAccent",
       "ex": "warning"
     },
     "syncBorderColorWithMode": true
@@ -96,20 +100,24 @@ Vim settings go under the `piVim` key in `~/.pi/agent/settings.json` or project 
 }
 ```
 
+`clipboardMirror` can be `"all"` (mirror all deletes/changes/yanks), `"yank"` (mirror only yanks), or `"never"` (no system clipboard sync).
+
 Settings are read from global settings first, then per-project settings override.
 
 ## Package structure
 
 ```
 src/
-├── index.ts                  # Extension entry point, ModalEditor class (~3400 lines)
+├── index.ts                  # Extension entry point, ModalEditor class (~3866 lines)
 ├── stash.ts                  # Prompt stash/restore shortcut and hooks
 ├── motions.ts                # Motion calculation utilities
 ├── text-objects.ts           # Text object range resolution
+├── visual.ts                 # Visual-mode selection math
+├── visual-render.ts          # Visual-mode highlight overlay
 ├── word-boundary-cache.ts    # Word boundary cache (performance)
 ├── settings.ts               # Settings reader (piVim config key)
 ├── clipboard-policy.ts       # Clipboard mirror policy types/validation
-├── types.ts                  # Shared types and constants
+└── types.ts                  # Shared types and constants
 ```
 
 ## Development

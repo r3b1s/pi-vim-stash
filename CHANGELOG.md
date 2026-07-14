@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.6](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.5...pi-vim-stash-v0.2.6) (2026-07-14)
+
+
+### Bug Fixes
+
+* trigger double-escape session tree/fork in normal mode with content ([51e1e8e](https://github.com/r3b1s/pi-vim-stash/commit/51e1e8e882ecc410bc1a491a2dc5ea106bbf61d3))
+
+
+### Documentation
+
+* sync README with extension logic ([e897c5a](https://github.com/r3b1s/pi-vim-stash/commit/e897c5a62f27bf5c05000c3ea5a404c574352344))
+
+
+### Miscellaneous Chores
+
+* ignore .commandcode directory ([555c198](https://github.com/r3b1s/pi-vim-stash/commit/555c1988828eaedb04359b2f6d902ce9b9891b55))
+
 ## [0.2.5](https://github.com/r3b1s/pi-vim-stash/compare/pi-vim-stash-v0.2.4...pi-vim-stash-v0.2.5) (2026-07-13)
 
 

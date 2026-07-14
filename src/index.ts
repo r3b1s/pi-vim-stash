@@ -25,7 +25,11 @@ import {
   reverseCharMotion,
   type WordMotionClass,
 } from "./motions.js";
-import { type ModeColorSettings, readPiVimSettings } from "./settings.js";
+import {
+  type ModeColorSettings,
+  readDoubleEscapeAction,
+  readPiVimSettings,
+} from "./settings.js";
 import initStash from "./stash.js";
 import {
   resolveDelimitedTextObjectRange,
@@ -80,6 +84,7 @@ const CLIPBOARD_WRITE_TIMEOUT_MS = PI_NATIVE_CLIPBOARD_TIMEOUT_MS + 500;
 const CLIPBOARD_SPAWN_FAILURE_LIMIT = 3;
 const CLIPBOARD_READ_TIMEOUT_MS = 750;
 const CLIPBOARD_READ_MAX_BUFFER_BYTES = 1024 * 1024;
+const DOUBLE_ESCAPE_WINDOW_MS = 500;
 const MODE_COLORS = {
   insert: "borderMuted",
   normal: "borderAccent",
@@ -117,6 +122,7 @@ type ModeColorizers = Record<ModeColorKey, (s: string) => string>;
 type ModalEditorOptions = {
   labelColorizers?: ModeColorizers | null;
   borderColorizers?: ModeColorizers | null;
+  cwd?: string;
 };
 type ThemeLike = { fg(token: string, text: string): string };
 
@@ -683,6 +689,8 @@ export class ModalEditor extends CustomEditor {
   private clipboardReadFn: ClipboardReadFn = readClipboardInChildProcess;
   private quitFn: () => void = () => {};
   private notifyFn: (message: string) => void = () => {};
+  private doubleEscapeAction: "fork" | "tree" | "none" = "tree";
+  private lastEscapeTime = 0;
 
   constructor(
     tui: CustomEditorConstructorArgs[0],
@@ -694,6 +702,9 @@ export class ModalEditor extends CustomEditor {
     this.cursorShapeRuntime = getCursorShapeRuntime(tui);
     this.labelColorizers = opts?.labelColorizers ?? null;
     this.borderColorizers = opts?.borderColorizers ?? null;
+    if (opts?.cwd) {
+      this.doubleEscapeAction = readDoubleEscapeAction(opts.cwd);
+    }
     this.installModeBorderColorizer();
   }
 
@@ -721,6 +732,9 @@ export class ModalEditor extends CustomEditor {
   }
   setNotifyFn(fn: (message: string) => void): void {
     this.notifyFn = fn;
+  }
+  setDoubleEscapeAction(action: "fork" | "tree" | "none"): void {
+    this.doubleEscapeAction = action;
   }
   getRegister(): string {
     return this.unnamedRegister;
@@ -1266,9 +1280,26 @@ export class ModalEditor extends CustomEditor {
     if ("insert" === this.mode) {
       this.clearUnderlyingPasteStateIfActive();
       this.setMode("normal");
-    } else {
-      super.handleInput("\x1b"); // pass escape to abort agent
+      return;
     }
+
+    // Normal mode: support double-escape for session tree/fork even when the
+    // editor has content. The base editor only triggers this when empty, so we
+    // detect it ourselves and then call the copied action handler.
+    const now = Date.now();
+    if (now - this.lastEscapeTime < DOUBLE_ESCAPE_WINDOW_MS) {
+      this.lastEscapeTime = 0;
+      if (this.doubleEscapeAction !== "none") {
+        const action =
+          this.doubleEscapeAction === "tree"
+            ? "app.session.tree"
+            : "app.session.fork";
+        this.actionHandlers.get(action)?.();
+      }
+      return;
+    }
+    this.lastEscapeTime = now;
+    super.handleInput("\x1b"); // pass escape to abort agent
   }
 
   private isEnterLikeInput(data: string): boolean {
@@ -3848,6 +3879,7 @@ export default function (pi: ExtensionAPI) {
       const editor = new ModalEditor(tui, theme, kb, {
         labelColorizers,
         borderColorizers,
+        cwd: ctx.cwd,
       });
       editor.setClipboardMirrorPolicy(clipboardMirrorPolicy.policy);
       editor.setQuitFn(() => ctx.shutdown());

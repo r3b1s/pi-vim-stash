@@ -764,6 +764,40 @@ describe("mode transitions", () => {
     }
   });
 
+  it("double escape in normal mode with content triggers session tree", () => {
+    const { editor } = createEditorWithSpy("hello");
+    editor.setDoubleEscapeAction("tree");
+    let treeCalls = 0;
+    let forkCalls = 0;
+    editor.actionHandlers.set("app.session.tree", () => treeCalls++);
+    editor.actionHandlers.set("app.session.fork", () => forkCalls++);
+    sendKeys(editor, ["\x1b", "\x1b"]);
+    expect(treeCalls).toBe(1);
+    expect(forkCalls).toBe(0);
+    expect(editor.getMode()).toBe("normal");
+  });
+
+  it("double escape in normal mode respects fork setting", () => {
+    const { editor } = createEditorWithSpy("hello");
+    editor.setDoubleEscapeAction("fork");
+    let treeCalls = 0;
+    let forkCalls = 0;
+    editor.actionHandlers.set("app.session.tree", () => treeCalls++);
+    editor.actionHandlers.set("app.session.fork", () => forkCalls++);
+    sendKeys(editor, ["\x1b", "\x1b"]);
+    expect(treeCalls).toBe(0);
+    expect(forkCalls).toBe(1);
+  });
+
+  it("double escape in normal mode with none does nothing", () => {
+    const { editor } = createEditorWithSpy("hello");
+    editor.setDoubleEscapeAction("none");
+    let treeCalls = 0;
+    editor.actionHandlers.set("app.session.tree", () => treeCalls++);
+    sendKeys(editor, ["\x1b", "\x1b"]);
+    expect(treeCalls).toBe(0);
+  });
+
   it("a at EOL on non-last line appends on same line", () => {
     const { editor } = createMultiLineEditor("foo\nbar");
     sendKeys(editor, ["$", "a", "X"]);

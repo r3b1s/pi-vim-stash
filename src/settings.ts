@@ -92,3 +92,12 @@ export function setPiVimSettingsReaderForTests(next: typeof disk) {
     reader = prev;
   };
 }
+
+export function readDoubleEscapeAction(cwd: string): "fork" | "tree" | "none" {
+  try {
+    const s = SettingsManager.create(cwd);
+    return s.getDoubleEscapeAction();
+  } catch {
+    return "tree";
+  }
+}

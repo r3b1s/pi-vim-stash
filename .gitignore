@@ -44,6 +44,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Command Code local config
+.commandcode/
+
 # Editor files
 *.swp
 *.swo
